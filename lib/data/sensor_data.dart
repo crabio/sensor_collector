@@ -16,22 +16,22 @@ class SensorData {
   });
 
   static String csvHeader() {
-    return 'dt,user_acc_x,user_acc_y,user_acc_z,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,mag_x,mag_y,mag_z';
+    return 'dt,user_acc_x,user_acc_y,user_acc_z,acc_x,acc_y,acc_z,gyr_x,gyr_y,gyr_z,mag_x,mag_y,mag_z\n';
   }
 
   String toCsv() {
     return '${dt.millisecondsSinceEpoch.toString()}'
-        ',${userAccelerometerEvent != null ? userAccelerometerEvent!.x.toString() : "null"}'
-        ',${userAccelerometerEvent != null ? userAccelerometerEvent!.y.toString() : "null"}'
-        ',${userAccelerometerEvent != null ? userAccelerometerEvent!.z.toString() : "null"}'
-        ',${accelerometerEvent != null ? accelerometerEvent!.x.toString() : "null"}'
-        ',${accelerometerEvent != null ? accelerometerEvent!.y.toString() : "null"}'
-        ',${accelerometerEvent != null ? accelerometerEvent!.z.toString() : "null"}'
-        ',${gyroscopeEvent != null ? gyroscopeEvent!.x.toString() : "null"}'
-        ',${gyroscopeEvent != null ? gyroscopeEvent!.y.toString() : "null"}'
-        ',${gyroscopeEvent != null ? gyroscopeEvent!.z.toString() : "null"}'
-        ',${magnetometerEvent != null ? magnetometerEvent!.x.toString() : "null"}'
-        ',${magnetometerEvent != null ? magnetometerEvent!.y.toString() : "null"}'
-        ',${magnetometerEvent != null ? magnetometerEvent!.z.toString() : "null"}';
+        ',${userAccelerometerEvent != null ? userAccelerometerEvent!.x.toString() : ""}'
+        ',${userAccelerometerEvent != null ? userAccelerometerEvent!.y.toString() : ""}'
+        ',${userAccelerometerEvent != null ? userAccelerometerEvent!.z.toString() : ""}'
+        ',${accelerometerEvent != null ? accelerometerEvent!.x.toString() : ""}'
+        ',${accelerometerEvent != null ? accelerometerEvent!.y.toString() : ""}'
+        ',${accelerometerEvent != null ? accelerometerEvent!.z.toString() : ""}'
+        ',${gyroscopeEvent != null ? gyroscopeEvent!.x.toString() : ""}'
+        ',${gyroscopeEvent != null ? gyroscopeEvent!.y.toString() : ""}'
+        ',${gyroscopeEvent != null ? gyroscopeEvent!.z.toString() : ""}'
+        ',${magnetometerEvent != null ? magnetometerEvent!.x.toString() : ""}'
+        ',${magnetometerEvent != null ? magnetometerEvent!.y.toString() : ""}'
+        ',${magnetometerEvent != null ? magnetometerEvent!.z.toString() : ""}\n';
   }
 }

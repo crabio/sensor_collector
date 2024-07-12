@@ -1,24 +1,27 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:sensor_collector/data/sensor_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:path/path.dart' as p;
+import 'package:mutex/mutex.dart';
 
 class DataWriterService {
   final Logger _log = Logger('DataWriterService');
-
-  late Timer _timer;
-
   final Set<DateTime> _collectedDts = {};
   final Map<DateTime, UserAccelerometerEvent> _userAccelerometerBuffer = {};
   final Map<DateTime, AccelerometerEvent> _accelerometerBuffer = {};
   final Map<DateTime, GyroscopeEvent> _gyroscopeBuffer = {};
   final Map<DateTime, MagnetometerEvent> _magnetometerBuffer = {};
+  final Mutex _mu = Mutex();
 
-  DataWriterService();
+  late Timer _timer;
+  late Duration flushPeriod;
+  late IOSink _outputFileSink;
+
+  DataWriterService({this.flushPeriod = const Duration(seconds: 1)});
 
   void addUserAccelerometerEvent(DateTime dt, UserAccelerometerEvent event) {
     _collectedDts.add(dt);
@@ -40,13 +43,11 @@ class DataWriterService {
     _magnetometerBuffer[dt] = event;
   }
 
-  void flushCollectedData() {
-    _log.fine('Flush data');
+  Future<void> flushCollectedData() async {
+    _log.fine('Flush collected data');
 
-    final outputFile = File('out.dat');
-    final outputFileSink = outputFile.openWrite();
-
-    outputFileSink.add(SensorData.csvHeader().codeUnits);
+    // Lock mutex to prevent parallel file write
+    await _mu.acquire();
 
     final collectedDtsBuffer = Set.from(_collectedDts);
     for (DateTime dt in collectedDtsBuffer) {
@@ -59,15 +60,12 @@ class DataWriterService {
       );
 
       // Write to csv file
-      outputFileSink.add(sensorData.toCsv().codeUnits);
+      _outputFileSink.add(sensorData.toCsv().codeUnits);
     }
     // Flush file
-    outputFileSink.flush();
-
-    outputFileSink.close();
+    await _outputFileSink.flush();
 
     // Delete saved data
-    _log.fine('Saved ${_collectedDts.length} timestamps samples');
     for (DateTime dt in collectedDtsBuffer) {
       _collectedDts.remove(dt);
       _userAccelerometerBuffer.remove(dt);
@@ -75,16 +73,53 @@ class DataWriterService {
       _gyroscopeBuffer.remove(dt);
       _magnetometerBuffer.remove(dt);
     }
+
+    _mu.release();
   }
 
-  void start() {
-    _timer = Timer.periodic(
-        const Duration(seconds: 1), (timer) => flushCollectedData());
+  Future<void> start() async {
+    // Create new file
+    final filePath = await _generateFilePath();
+    _outputFileSink = File(filePath).openWrite();
+    // Write header
+    _outputFileSink.add(SensorData.csvHeader().codeUnits);
+    await _outputFileSink.flush();
+    // Start periodic flush to file
+    _timer = Timer.periodic(flushPeriod, (t) => flushCollectedData());
+    _log.fine('Start periodic collected data flush. filePath = $filePath');
   }
 
-  void stop() {
+  Future<void> stop() async {
+    _log.fine('Stop periodic collected data flush');
     _timer.cancel();
     // Flush data saved in buffer
-    flushCollectedData();
+    await flushCollectedData();
+    // Close file
+    await _outputFileSink.close();
+  }
+
+  static String _generateFileName() {
+    final datetimeString = DateTime.now()
+        .toIso8601String()
+        .replaceAll("T", "")
+        .replaceAll(":", "-");
+    return "sensor-data-$datetimeString.csv";
+  }
+
+  static Future<Directory> _generateFileDirectory() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      // downloads folder - android only - API>30
+      return Directory('/storage/emulated/0/Download/SensorCollector');
+    } else {
+      return await getApplicationDocumentsDirectory();
+    }
+  }
+
+  static Future<String> _generateFilePath() async {
+    final fileDir = await _generateFileDirectory();
+    if (!await fileDir.exists()) {
+      fileDir.create();
+    }
+    return p.join(fileDir.path, _generateFileName());
   }
 }
