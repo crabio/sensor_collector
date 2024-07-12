@@ -60,7 +60,7 @@ class DataWriterService {
       );
 
       // Write to csv file
-      _outputFileSink.add(sensorData.toCsv().codeUnits);
+      _outputFileSink.add(GZipCodec().encode(sensorData.toCsv().codeUnits));
     }
     // Flush file
     await _outputFileSink.flush();
@@ -81,8 +81,8 @@ class DataWriterService {
     // Create new file
     final filePath = await _generateFilePath();
     _outputFileSink = File(filePath).openWrite();
-    // Write header
-    _outputFileSink.add(SensorData.csvHeader().codeUnits);
+    // Write header in gzip
+    _outputFileSink.add(GZipCodec().encode(SensorData.csvHeader().codeUnits));
     await _outputFileSink.flush();
     // Start periodic flush to file
     _timer = Timer.periodic(flushPeriod, (t) => flushCollectedData());
@@ -101,9 +101,9 @@ class DataWriterService {
   static String _generateFileName() {
     final datetimeString = DateTime.now()
         .toIso8601String()
-        .replaceAll("T", "")
+        .replaceAll("T", "-")
         .replaceAll(":", "-");
-    return "sensor-data-$datetimeString.csv";
+    return "sensor-data-$datetimeString.csv.gz";
   }
 
   static Future<Directory> _generateFileDirectory() async {

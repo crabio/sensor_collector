@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:sensor_collector/service/sensor_collector.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 void main() {
   Logger.root.level = Level.FINE;
@@ -84,7 +85,7 @@ class _TimerAppState extends State<TimerApp> {
     isRunning = true;
     stopwatch.reset();
     stopwatch.start();
-    scs.start();
+    scs.start(SensorInterval.fastestInterval);
     _timer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
       setState(() {});
     });
