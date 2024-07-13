@@ -19,7 +19,7 @@ class _SensorCollectorPageState extends State<SensorCollectorPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text(
-                state.elapsed.toString(),
+                state.elapsed.toString().split(".")[0],
                 style: const TextStyle(fontSize: 48.0),
               ),
               const SizedBox(height: 20.0),

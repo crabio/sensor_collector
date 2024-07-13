@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sensor_collector/repositories/sensor_collector.dart';
+import 'package:sensor_collector/repositories/wear_os_connector.dart';
 
 part 'event.dart';
 part 'state.dart';
@@ -15,6 +16,8 @@ class SensorCollectorBloc
 
   final SensorCollectorService sensorCollectorService =
       SensorCollectorService();
+
+  final WearOsConnector_wearOsConnector = WearOsConnector();
 
   late Ticker _ticker;
 
