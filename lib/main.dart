@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
-import 'package:sensor_collector/service/sensor_collector.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:sensor_collector/bloc/bloc.dart';
 
 void main() {
   Logger.root.level = Level.FINE;
@@ -11,90 +9,60 @@ void main() {
     print('${record.level.name}: ${record.time}: ${record.message}');
   });
 
-  runApp(const MyApp());
+  runApp(const SensorCollectorApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SensorCollectorApp extends StatelessWidget {
+  const SensorCollectorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Timer App',
-      home: TimerApp(),
-    );
-  }
-}
-
-class TimerApp extends StatefulWidget {
-  const TimerApp({super.key});
-
-  @override
-  _TimerAppState createState() => _TimerAppState();
-}
-
-class _TimerAppState extends State<TimerApp> {
-  bool isRunning = false;
-  Stopwatch stopwatch = Stopwatch();
-  late Timer _timer;
-  final SensorCollectorService scs = SensorCollectorService();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              stopwatch.elapsed.toString(),
-              style: const TextStyle(fontSize: 48.0),
-            ),
-            const SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  isRunning ? _stopCollect() : _startCollect();
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isRunning ? Colors.red : Colors.green,
-              ),
-              child: Text(isRunning ? 'Stop' : 'Start'),
-            ),
-          ],
+    return MaterialApp(
+      home: Scaffold(
+        body: BlocProvider(
+          create: (_) => SensorCollectorBloc(),
+          child: const SensorCollectorPage(),
         ),
       ),
     );
   }
+}
+
+class SensorCollectorPage extends StatefulWidget {
+  const SensorCollectorPage({super.key});
 
   @override
-  void dispose() {
-    super.dispose();
-    if (isRunning) {
-      stopwatch.stop();
-    }
-  }
+  State<SensorCollectorPage> createState() => _SensorCollectorPageState();
+}
 
-  void _startCollect() {
-    isRunning = true;
-    stopwatch.reset();
-    stopwatch.start();
-    scs.start(SensorInterval.fastestInterval);
-    _timer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
-      setState(() {});
-    });
-  }
-
-  void _stopCollect() {
-    isRunning = false;
-    stopwatch.stop();
-    scs.stop();
-    _timer.cancel();
+class _SensorCollectorPageState extends State<SensorCollectorPage> {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SensorCollectorBloc, SensorCollectorState>(
+      builder: (context, state) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                state.elapsed.toString(),
+                style: const TextStyle(fontSize: 48.0),
+              ),
+              const SizedBox(height: 20.0),
+              ElevatedButton(
+                onPressed: () => context
+                    .read<SensorCollectorBloc>()
+                    .add(PressCollectingButton()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      state.isCollectingData ? Colors.red : Colors.green,
+                ),
+                child: Text(state.isCollectingData ? 'Stop' : 'Start'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:logging/logging.dart';
-import 'package:sensor_collector/service/data_writer.dart';
+import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 class SensorCollectorService {
