@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sensor_collector/bloc/bloc.dart';
@@ -33,6 +34,21 @@ class _SensorCollectorPageState extends State<SensorCollectorPage> {
                 ),
                 child: Text(state.isCollectingData ? 'Stop' : 'Start'),
               ),
+              state.isWeareable
+                  ? Container()
+                  : IconButton(
+                      onPressed: !state.hasConnectedWearDevice &&
+                              !state.hasWearDeviceFilesforSync
+                          ? null
+                          : () => print('Sync'),
+                      icon: Icon(
+                        state.hasConnectedWearDevice
+                            ? state.hasWearDeviceFilesforSync
+                                ? Icons.sync
+                                : Icons.watch
+                            : Icons.watch_off,
+                      ),
+                    ),
             ],
           ),
         );

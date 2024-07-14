@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
@@ -7,45 +8,70 @@ class WearOsConnector {
   final Logger _log = Logger('WearOsConnector');
   final FlutterWearOsConnectivity _flutterWearOsConnectivity =
       FlutterWearOsConnectivity();
+  late Timer _scanTimer;
+  final StreamController<List<WearOsDevice>> _connectedDevicesStreamController =
+      StreamController();
+  Stream<List<WearOsDevice>> get connectedDevicesStream =>
+      _connectedDevicesStreamController.stream;
+  final StreamController<List<DataItem>> _availableDataItemsStreamController =
+      StreamController();
+  Stream<List<DataItem>> get availableDataItemsStream =>
+      _availableDataItemsStreamController.stream;
 
-  WearOsConnector() {
-    _log.fine('Start');
-    _flutterWearOsConnectivity.configureWearableAPI();
-    Future.delayed(Duration.zero, () async {
-      _flutterWearOsConnectivity.messageReceived().listen((message) {
-        _log.fine(
-            'New message from watch: ${String.fromCharCodes(message.data)}  ${message.path}');
-      });
+  Future<void> init() async {
+    await _flutterWearOsConnectivity.configureWearableAPI();
+  }
 
-      List<WearOsDevice> connectedDevices =
-          await _flutterWearOsConnectivity.getConnectedDevices();
-      if (connectedDevices.isEmpty) {
-        _log.fine('No connected smart watches');
-      }
-      for (WearOsDevice device in connectedDevices) {
+  void startScan() => _scanTimer =
+      Timer.periodic(const Duration(seconds: 5), (timer) => scan());
+  void stopScan() => _scanTimer.cancel();
+
+  Future<void> scan() async {
+    List<WearOsDevice> connectedDevices =
+        await _flutterWearOsConnectivity.getConnectedDevices();
+    _connectedDevicesStreamController.add(connectedDevices);
+    if (connectedDevices.isEmpty) {
+      _log.fine('No connected devices');
+    } else {
+      for (var device in connectedDevices) {
         _log.fine(
             'Connected device: ${device.id} ${device.name} ${device.isNearby}');
-        await _flutterWearOsConnectivity.sendMessage(
-            Uint8List.fromList('Hello'.codeUnits),
-            deviceId: device.id,
-            path: "/test-message",
-            priority: MessagePriority.low);
-        _log.fine(
-            'Sent message to connected device: ${device.id} ${device.name} ${device.isNearby}');
       }
-      WearOsDevice localDevice =
-          await _flutterWearOsConnectivity.getLocalDevice();
-      _log.fine(
-          'Local device: ${localDevice.id} ${localDevice.name} ${localDevice.isNearby}');
+    }
 
-      List<DataItem> allDataItems =
-          await _flutterWearOsConnectivity.getAllDataItems();
-      if (allDataItems.isEmpty) {
-        _log.fine('No available dataItems on smart watch');
+    if (connectedDevices.isNotEmpty) {
+      for (var device in connectedDevices) {
+        _log.fine('Scan DataItems from device ${device.id} ${device.name}');
+        final Uri dataItemWildcard = Uri(
+          scheme: "wear",
+          host: device.id,
+          path: "/sensor-collector",
+        );
+        List<DataItem> dataItems = await _flutterWearOsConnectivity
+            .findDataItemsOnURIPath(pathURI: dataItemWildcard);
+        _availableDataItemsStreamController.add(dataItems);
+        if (dataItems.isEmpty) {
+          _log.fine('No avaialble data items');
+        } else {
+          for (var dataItem in dataItems) {
+            _log.fine(
+                'Data item: ${dataItem.pathURI} ${dataItem.mapData} ${dataItem.files}');
+          }
+        }
       }
-      for (DataItem datItem in allDataItems) {
-        _log.fine('Available dataItem on smart watch: ${datItem.pathURI}');
-      }
-    });
+    }
+  }
+
+  Future<void> startExportDataItems() async {
+    DataItem? dataItem = await _flutterWearOsConnectivity.syncData(
+      path: "/sensor-collector",
+      data: {
+        "message":
+            "Data sync by AndroidOS app on /data-path at ${DateTime.now().millisecondsSinceEpoch}"
+      },
+      isUrgent: false,
+    );
+    _log.fine(
+        'Export data item: ${dataItem!.pathURI} ${dataItem.mapData} ${dataItem.files}');
   }
 }
