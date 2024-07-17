@@ -5,14 +5,14 @@ final class SensorCollectorMobileState extends Equatable {
   final bool isCollectingData;
   final Duration elapsed;
   final bool hasConnectedWearDevice;
-  final int filesToSync;
+  final Map<String, File> filesToSync;
 
   const SensorCollectorMobileState({
     this.isWeareable = false,
     this.isCollectingData = false,
     this.elapsed = const Duration(),
     this.hasConnectedWearDevice = false,
-    this.filesToSync = 0,
+    this.filesToSync = const {},
   });
 
   SensorCollectorMobileState copyWith({
@@ -20,7 +20,7 @@ final class SensorCollectorMobileState extends Equatable {
     bool? isCollectingData,
     Duration? elapsed,
     bool? hasConnectedWearDevice,
-    int? filesToSync,
+    Map<String, File>? filesToSync,
   }) {
     return SensorCollectorMobileState(
       isWeareable: isWeareable ?? this.isWeareable,

@@ -22,9 +22,10 @@ final class ElapsedTime extends SensorCollectorWearableEvent {
 
 final class NewDataFile extends SensorCollectorWearableEvent {
   final File file;
+  final String fileName;
 
-  const NewDataFile(this.file);
+  const NewDataFile(this.file, this.fileName);
 
   @override
-  List<Object> get props => [file];
+  List<Object> get props => [file, fileName];
 }

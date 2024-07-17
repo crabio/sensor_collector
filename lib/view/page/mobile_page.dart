@@ -28,20 +28,20 @@ class _SensorCollectorMobilePageState extends State<SensorCollectorMobilePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    onPressed:
-                        !state.hasConnectedWearDevice && state.filesToSync == 0
-                            ? null
-                            : () => print('Sync'),
+                    onPressed: !state.hasConnectedWearDevice &&
+                            state.filesToSync.isEmpty
+                        ? null
+                        : () => print('Sync'),
                     // TODO Implement sync
                     icon: Icon(
                       state.hasConnectedWearDevice
-                          ? state.filesToSync > 0
+                          ? state.filesToSync.isNotEmpty
                               ? Icons.sync
                               : Icons.watch
                           : Icons.watch_off,
                     ),
                   ),
-                  Text(state.filesToSync.toString()),
+                  Text(state.filesToSync.length.toString()),
                 ],
               ),
             ],

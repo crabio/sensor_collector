@@ -20,20 +20,22 @@ final class ElapsedTime extends SensorCollectorMobileEvent {
   List<Object> get props => [elapsed];
 }
 
-final class NewConnectedDevice extends SensorCollectorMobileEvent {
-  final List<WearOsDevice> devices;
+// Event will be sent, when supported device observed
+final class WearDeviceConnected extends SensorCollectorMobileEvent {
+  final WearOsDevice device;
 
-  const NewConnectedDevice(this.devices);
+  const WearDeviceConnected(this.device);
 
   @override
-  List<Object> get props => [devices];
+  List<Object> get props => [device];
 }
 
 final class NewDataFileForSync extends SensorCollectorMobileEvent {
   final File file;
+  final String fileName;
 
-  const NewDataFileForSync(this.file);
+  const NewDataFileForSync(this.file, this.fileName);
 
   @override
-  List<Object> get props => [file];
+  List<Object> get props => [file, fileName];
 }

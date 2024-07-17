@@ -7,60 +7,74 @@ import 'package:sensor_collector/repositories/wear_os_service.dart';
 // Class for importing files from remote wearable device
 class WearOsImporter extends WearOsService {
   final Logger _log = Logger('WearOsConnectorImporter');
-  late Timer _scanTimer;
-  final StreamController<List<WearOsDevice>> _connectedDevicesStreamController =
-      StreamController();
-  Stream<List<WearOsDevice>> get connectedDevicesStream =>
-      _connectedDevicesStreamController.stream;
-  final StreamController<File> _availableDownstreamFileController =
-      StreamController();
-  Stream<File> get availableDownstreamFileStream =>
-      _availableDownstreamFileController.stream;
-  final Map<String, File> availableFilesForSync = {};
 
-  void startScan() => _scanTimer =
-      Timer.periodic(const Duration(seconds: 5), (timer) => scan());
-  void stopScan() => _scanTimer.cancel();
+  Stream<WearOsDevice> waitDevice() {
+    late Timer scanTimer;
+    final StreamController<WearOsDevice> streamController = StreamController(
+      onCancel: () => scanTimer.cancel(),
+    );
+    scanTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      final device = await _scan();
+      if (device != null) {
+        streamController.add(device);
+        timer.cancel();
+      }
+    });
 
-  Future<void> scan() async {
+    return streamController.stream;
+  }
+
+  Future<WearOsDevice?> _scan() async {
     List<WearOsDevice> connectedDevices =
         await flutterWearOsConnectivity.getConnectedDevices();
-    _connectedDevicesStreamController.add(connectedDevices);
     if (connectedDevices.isEmpty) {
       _log.fine('No connected devices');
+      return null;
     } else {
       for (var device in connectedDevices) {
         _log.fine(
-            'Connected device: ${device.id} ${device.name} ${device.isNearby}');
+            'Check connected device: ${device.id} ${device.name} ${device.isNearby}');
+        // Check that connected device has required DataItem
+        if (await _deviceHasDataItem(device)) {
+          _log.fine(
+              'Found supported device: ${device.id} ${device.name} ${device.isNearby}');
+          return device;
+        }
       }
     }
-
-    if (connectedDevices.isNotEmpty) {
-      for (var device in connectedDevices) {
-        _scanDataItems(device);
-      }
-    }
+    return null;
   }
 
-  Future<void> _scanDataItems(final WearOsDevice device) async {
-    _log.fine('Scan DataItems from device ${device.id} ${device.name}');
-    final Uri dataItemWildcard = Uri(
+  Future<bool> _deviceHasDataItem(final WearOsDevice device) async {
+    List<DataItem> dataItems = await flutterWearOsConnectivity
+        .findDataItemsOnURIPath(pathURI: _dataItemUri(device));
+    return dataItems.isNotEmpty;
+  }
+
+  Future<Map<String, File>> getFilesFromDevice(
+      final WearOsDevice device) async {
+    List<DataItem> dataItems = await flutterWearOsConnectivity
+        .findDataItemsOnURIPath(pathURI: _dataItemUri(device));
+    return dataItems.first.files;
+  }
+
+  Stream<Map<String, File>> subscribeOnNewFiles(final WearOsDevice device) {
+    final StreamController<Map<String, File>> streamController =
+        StreamController(
+      onCancel: () async => await flutterWearOsConnectivity.removeDataListener(
+          pathURI: _dataItemUri(device)),
+    );
+    flutterWearOsConnectivity.dataChanged(pathURI: _dataItemUri(device)).listen(
+        (dataEvents) => dataEvents.forEach(
+            (dataEvent) => streamController.add(dataEvent.dataItem.files)));
+    return streamController.stream;
+  }
+
+  Uri _dataItemUri(final WearOsDevice device) {
+    return Uri(
       scheme: "wear",
       host: device.id,
       path: "/sensor-collector",
     );
-    List<DataItem> dataItems = await flutterWearOsConnectivity
-        .findDataItemsOnURIPath(pathURI: dataItemWildcard);
-    if (dataItems.isEmpty) {
-      _log.fine('No avaialble data items');
-    } else {
-      for (final file in dataItems[0].files.values) {
-        _availableDownstreamFileController.add(file);
-      }
-      for (var dataItem in dataItems) {
-        _log.fine(
-            'Data item: ${dataItem.pathURI} ${dataItem.mapData} ${dataItem.files}');
-      }
-    }
   }
 }

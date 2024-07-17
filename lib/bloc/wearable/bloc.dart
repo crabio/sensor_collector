@@ -26,7 +26,8 @@ class SensorCollectorWearableBloc
     on<ElapsedTime>(_onElapsedTime);
     on<NewDataFile>(_onNewDataFile);
 
-    dataWriterService.dataFilesStream.listen((file) => add(NewDataFile(file)));
+    dataWriterService.dataFilesStream
+        .listen((file) => add(NewDataFile(file, basename(file.path))));
 
     // Init late
     sensorCollectorService = SensorCollectorService(dataWriterService);
@@ -41,7 +42,7 @@ class SensorCollectorWearableBloc
     // On wearable device init exporter
     await _wearOsExporter.init();
     await dataWriterService.init();
-    _wearOsExporter.exportDataItems();
+    _wearOsExporter.exportDataItems({});
   }
 
   void _onPressCollectingButton(
@@ -74,7 +75,12 @@ class SensorCollectorWearableBloc
     NewDataFile event,
     Emitter<SensorCollectorWearableState> emit,
   ) {
-    _wearOsExporter.availableFiles[basename(event.file.path)] = event.file;
-    _wearOsExporter.exportDataItems();
+    final Map<String, File> availableFiles = {};
+    availableFiles.addAll(state.availableFiles);
+    if (!availableFiles.containsKey(event.fileName)) {
+      availableFiles[event.fileName] = event.file;
+    }
+    emit(state.copyWith(availableFiles: availableFiles));
+    _wearOsExporter.exportDataItems(availableFiles);
   }
 }

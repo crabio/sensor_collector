@@ -7,9 +7,8 @@ import 'package:sensor_collector/repositories/wear_os_service.dart';
 // Class for exporting files from remote wearable device
 class WearOsExporter extends WearOsService {
   final Logger _log = Logger('WearOsConnectorExporter');
-  final Map<String, File> availableFiles = {};
 
-  Future<void> exportDataItems() async {
+  Future<void> exportDataItems(final Map<String, File> availableFiles) async {
     DataItem? dataItem = await flutterWearOsConnectivity.syncData(
       path: "/sensor-collector",
       data: {
