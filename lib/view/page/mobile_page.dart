@@ -32,20 +32,23 @@ class _SensorCollectorMobilePageState extends State<SensorCollectorMobilePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    onPressed: !state.hasConnectedWearDevice &&
-                            state.filesToSync.isEmpty
-                        ? null
-                        : () => print('Sync'),
-                    // TODO Implement sync
-                    icon: Icon(
-                      state.hasConnectedWearDevice
-                          ? state.filesToSync.isNotEmpty
-                              ? Icons.sync
-                              : Icons.watch
-                          : Icons.watch_off,
-                    ),
-                  ),
+                  state.isSynInProgress
+                      ? const CircularProgressIndicator()
+                      : IconButton(
+                          onPressed: !state.hasConnectedWearDevice &&
+                                  state.filesToSync.isEmpty
+                              ? null
+                              : () => context
+                                  .read<SensorCollectorMobileBloc>()
+                                  .add(SyncWearFiles()),
+                          icon: Icon(
+                            state.hasConnectedWearDevice
+                                ? state.filesToSync.isNotEmpty
+                                    ? Icons.sync
+                                    : Icons.watch
+                                : Icons.watch_off,
+                          ),
+                        ),
                   Text(state.filesToSync.length.toString()),
                 ],
               ),

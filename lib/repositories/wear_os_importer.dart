@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:logging/logging.dart';
 import 'package:sensor_collector/repositories/wear_os_service.dart';
@@ -58,16 +59,31 @@ class WearOsImporter extends WearOsService {
     return dataItems.first.files;
   }
 
-  Stream<Map<String, File>> subscribeOnNewFiles(final WearOsDevice device) {
+  Stream<Map<String, File>> subscribeOnFilesUpdates(final WearOsDevice device) {
     final StreamController<Map<String, File>> streamController =
         StreamController(
       onCancel: () async => await flutterWearOsConnectivity.removeDataListener(
           pathURI: _dataItemUri(device)),
     );
-    flutterWearOsConnectivity.dataChanged(pathURI: _dataItemUri(device)).listen(
-        (dataEvents) => dataEvents.forEach(
-            (dataEvent) => streamController.add(dataEvent.dataItem.files)));
+    flutterWearOsConnectivity
+        .dataChanged(pathURI: _dataItemUri(device))
+        .listen((dataEvents) {
+      for (final dataEvent in dataEvents) {
+        streamController.add(dataEvent.dataItem.files);
+      }
+    });
     return streamController.stream;
+  }
+
+  Future<void> ackFileSynced(
+      final WearOsDevice device, final String fileName) async {
+    await flutterWearOsConnectivity.sendMessage(
+      Uint8List.fromList(fileName.codeUnits),
+      deviceId: device.id,
+      path: "/sensor-collector-synced-file",
+      priority: MessagePriority.low,
+    );
+    _log.fine('Sent ack on synced file $fileName to device ${device.name}');
   }
 
   Uri _dataItemUri(final WearOsDevice device) {

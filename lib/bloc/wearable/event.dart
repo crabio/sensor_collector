@@ -29,3 +29,12 @@ final class NewDataFile extends SensorCollectorWearableEvent {
   @override
   List<Object> get props => [file, fileName];
 }
+
+final class FileSyncAck extends SensorCollectorWearableEvent {
+  final String fileName;
+
+  const FileSyncAck(this.fileName);
+
+  @override
+  List<Object> get props => [fileName];
+}

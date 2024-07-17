@@ -27,9 +27,10 @@ class SensorCollectorMobileBloc
   SensorCollectorMobileBloc() : super(const SensorCollectorMobileState()) {
     on<Init>(_onInit);
     on<PressCollectingButton>(_onPressCollectingButton);
+    on<SyncWearFiles>(_onSyncWearFiles);
     on<ElapsedTime>(_onElapsedTime);
     on<WearDeviceConnected>(_onWearDeviceConnected);
-    on<NewDataFileForSync>(_onNewDataFileForSync);
+    on<FileForSyncUpdate>(_onFileForSyncUpdate);
 
     // Init late
     sensorCollectorService = SensorCollectorService(dataWriterService);
@@ -82,29 +83,38 @@ class SensorCollectorMobileBloc
     Emitter<SensorCollectorMobileState> emit,
   ) async {
     _stopWaitConnectedDevice();
-    emit(state.copyWith(hasConnectedWearDevice: true));
+    emit(
+        state.copyWith(hasConnectedWearDevice: true, wearDevice: event.device));
 
-    await _wearOsImporter.getFilesFromDevice(event.device).then((filesMap) =>
-        filesMap.forEach(
-            (fileName, file) => add(NewDataFileForSync(file, fileName))));
+    await _wearOsImporter
+        .getFilesFromDevice(event.device)
+        .then((filesMap) => add(FileForSyncUpdate(filesMap)));
 
-    _wearOsImporter.subscribeOnNewFiles(event.device).listen((filesForSync) =>
-        filesForSync.forEach(
-            (fileName, file) => add(NewDataFileForSync(file, fileName))));
+    _wearOsImporter
+        .subscribeOnFilesUpdates(event.device)
+        .listen((filesMap) => add(FileForSyncUpdate(filesMap)));
   }
 
-  void _onNewDataFileForSync(
-    NewDataFileForSync event,
+  void _onFileForSyncUpdate(
+    FileForSyncUpdate event,
     Emitter<SensorCollectorMobileState> emit,
   ) {
-    final Map<String, File> filesToSync = {};
-    filesToSync.addAll(state.filesToSync);
-    if (!filesToSync.containsKey(event.fileName)) {
-      filesToSync[event.fileName] = event.file;
-    }
-    _log.fine('NewDataFileForSync. filesToSync=$filesToSync');
+    emit(state.copyWith(filesToSync: event.filesMap));
+  }
 
-    emit(state.copyWith(filesToSync: filesToSync));
+  Future<void> _onSyncWearFiles(
+    SyncWearFiles event,
+    Emitter<SensorCollectorMobileState> emit,
+  ) async {
+    _log.fine('SyncWearFiles');
+    emit(state.copyWith(isSynInProgress: true));
+
+    state.filesToSync.forEach((fileName, file) {
+      dataWriterService.saveFileBytes(fileName, file);
+      _wearOsImporter.ackFileSynced(state.wearDevice!, fileName);
+    });
+
+    emit(state.copyWith(isSynInProgress: false));
   }
 
   void _startWaitConnectedDevice() {

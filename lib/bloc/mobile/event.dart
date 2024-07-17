@@ -11,6 +11,8 @@ final class Init extends SensorCollectorMobileEvent {}
 
 final class PressCollectingButton extends SensorCollectorMobileEvent {}
 
+final class SyncWearFiles extends SensorCollectorMobileEvent {}
+
 final class ElapsedTime extends SensorCollectorMobileEvent {
   final Duration elapsed;
 
@@ -30,12 +32,11 @@ final class WearDeviceConnected extends SensorCollectorMobileEvent {
   List<Object> get props => [device];
 }
 
-final class NewDataFileForSync extends SensorCollectorMobileEvent {
-  final File file;
-  final String fileName;
+final class FileForSyncUpdate extends SensorCollectorMobileEvent {
+  final Map<String, File> filesMap;
 
-  const NewDataFileForSync(this.file, this.fileName);
+  const FileForSyncUpdate(this.filesMap);
 
   @override
-  List<Object> get props => [file, fileName];
+  List<Object> get props => [filesMap];
 }

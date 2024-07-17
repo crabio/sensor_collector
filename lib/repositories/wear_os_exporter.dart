@@ -20,4 +20,16 @@ class WearOsExporter extends WearOsService {
     _log.fine(
         'Export data item: ${dataItem!.pathURI} ${dataItem.mapData} ${dataItem.files}');
   }
+
+  Stream<String> subscribeOnFileSyncAck() {
+    final ackUri =
+        Uri(scheme: "wear", host: "*", path: "/sensor-collector-synced-file");
+    final StreamController<String> streamController = StreamController(
+      onCancel: () async => await flutterWearOsConnectivity
+          .removeMessageListener(pathURI: ackUri),
+    );
+    flutterWearOsConnectivity.messageReceived().listen(
+        (message) => streamController.add(String.fromCharCodes(message.data)));
+    return streamController.stream;
+  }
 }

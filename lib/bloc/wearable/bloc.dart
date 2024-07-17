@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensor_collector/repositories/sensor_collector.dart';
@@ -14,6 +15,7 @@ part 'state.dart';
 
 class SensorCollectorWearableBloc
     extends Bloc<SensorCollectorWearableEvent, SensorCollectorWearableState> {
+  final Logger _log = Logger('SensorCollectorWearableBloc');
   final DataWriterService dataWriterService = DataWriterService();
   late SensorCollectorService sensorCollectorService;
   late Ticker _ticker;
@@ -25,6 +27,7 @@ class SensorCollectorWearableBloc
     on<PressCollectingButton>(_onPressCollectingButton);
     on<ElapsedTime>(_onElapsedTime);
     on<NewDataFile>(_onNewDataFile);
+    on<FileSyncAck>(_onFileSyncAck);
 
     dataWriterService.dataFilesStream
         .listen((file) => add(NewDataFile(file, basename(file.path))));
@@ -43,6 +46,9 @@ class SensorCollectorWearableBloc
     await _wearOsExporter.init();
     await dataWriterService.init();
     _wearOsExporter.exportDataItems({});
+    _wearOsExporter
+        .subscribeOnFileSyncAck()
+        .listen((fileName) => add(FileSyncAck(fileName)));
   }
 
   void _onPressCollectingButton(
@@ -75,11 +81,25 @@ class SensorCollectorWearableBloc
     NewDataFile event,
     Emitter<SensorCollectorWearableState> emit,
   ) {
+    _log.fine('_onNewDataFile: filename=${event.fileName}');
     final Map<String, File> availableFiles = {};
     availableFiles.addAll(state.availableFiles);
     if (!availableFiles.containsKey(event.fileName)) {
       availableFiles[event.fileName] = event.file;
     }
+    emit(state.copyWith(availableFiles: availableFiles));
+    _wearOsExporter.exportDataItems(availableFiles);
+  }
+
+  Future<void> _onFileSyncAck(
+    FileSyncAck event,
+    Emitter<SensorCollectorWearableState> emit,
+  ) async {
+    _log.fine('FileSyncAck: filename=${event.fileName}');
+    final Map<String, File> availableFiles = {};
+    availableFiles.addAll(state.availableFiles);
+    availableFiles.remove(event.fileName);
+    await File(state.availableFiles[event.fileName]!.path).delete();
     emit(state.copyWith(availableFiles: availableFiles));
     _wearOsExporter.exportDataItems(availableFiles);
   }

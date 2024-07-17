@@ -91,7 +91,7 @@ class DataWriterService {
 
   Future<void> start() async {
     // Create new file
-    final filePath = await _generateFilePath();
+    final filePath = await _generateFilePath(_generateFileName());
     _outputFile = File(filePath);
     _outputFileSink = _outputFile.openWrite();
     // Write header in gzip
@@ -113,6 +113,12 @@ class DataWriterService {
     _dataFilesStreamController.add(_outputFile);
   }
 
+  Future<void> saveFileBytes(final String fileName, final File file) async {
+    final filePath = await _generateFilePath(fileName);
+    File(filePath).writeAsBytesSync(file.readAsBytesSync());
+    _log.fine('File saved to $filePath');
+  }
+
   static String _generateFileName() {
     final datetimeString = DateTime.now()
         .toIso8601String()
@@ -130,12 +136,12 @@ class DataWriterService {
     }
   }
 
-  static Future<String> _generateFilePath() async {
+  static Future<String> _generateFilePath(final String fileName) async {
     final fileDir = await _generateFileDirectory();
     if (!await fileDir.exists()) {
       fileDir.create();
     }
-    return p.join(fileDir.path, _generateFileName());
+    return p.join(fileDir.path, fileName);
   }
 
   Future<List<File>> _listAvailableDataFiles() async {
