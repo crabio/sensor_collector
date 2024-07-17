@@ -23,7 +23,12 @@ class _SensorCollectorMobilePageState extends State<SensorCollectorMobilePage> {
             children: <Widget>[
               ElapsedTimerWidget(state.elapsed),
               const SizedBox(height: 20),
-              StartCollectButton(state.isCollectingData),
+              StartCollectButton(
+                () => context
+                    .read<SensorCollectorMobileBloc>()
+                    .add(PressCollectingButton()),
+                state.isCollectingData,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

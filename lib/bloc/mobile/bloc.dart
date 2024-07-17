@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:logging/logging.dart';
-import 'package:path/path.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensor_collector/repositories/sensor_collector.dart';
 import 'package:sensor_collector/repositories/wear_os_importer.dart';
@@ -25,7 +23,6 @@ class SensorCollectorMobileBloc
   final WearOsImporter _wearOsImporter = WearOsImporter();
 
   StreamSubscription<WearOsDevice>? _connectedDeviceSubscription;
-  StreamSubscription<Map<String, File>>? _filesForSyncSubscription;
 
   SensorCollectorMobileBloc() : super(const SensorCollectorMobileState()) {
     on<Init>(_onInit);
@@ -91,9 +88,8 @@ class SensorCollectorMobileBloc
         filesMap.forEach(
             (fileName, file) => add(NewDataFileForSync(file, fileName))));
 
-    _filesForSyncSubscription = _wearOsImporter
-        .subscribeOnNewFiles(event.device)
-        .listen((filesForSync) => filesForSync.forEach(
+    _wearOsImporter.subscribeOnNewFiles(event.device).listen((filesForSync) =>
+        filesForSync.forEach(
             (fileName, file) => add(NewDataFileForSync(file, fileName))));
   }
 
@@ -106,7 +102,7 @@ class SensorCollectorMobileBloc
     if (!filesToSync.containsKey(event.fileName)) {
       filesToSync[event.fileName] = event.file;
     }
-    _log.fine('NewDataFileForSync. filesToSync=${filesToSync}');
+    _log.fine('NewDataFileForSync. filesToSync=$filesToSync');
 
     emit(state.copyWith(filesToSync: filesToSync));
   }
