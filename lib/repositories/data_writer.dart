@@ -19,9 +19,21 @@ class DataWriterService {
 
   late Timer _timer;
   late Duration flushPeriod;
+  late File _outputFile;
   late IOSink _outputFileSink;
 
+  final StreamController<File> _dataFilesStreamController = StreamController();
+  Stream<File> get dataFilesStream => _dataFilesStreamController.stream;
+
   DataWriterService({this.flushPeriod = const Duration(seconds: 1)});
+
+  Future<void> init() async {
+    // Add all available data files to the stream
+    final availableDataFilesPaths = await _listAvailableDataFiles();
+    for (var dataFilePath in availableDataFilesPaths) {
+      _dataFilesStreamController.add(dataFilePath);
+    }
+  }
 
   void addUserAccelerometerEvent(DateTime dt, UserAccelerometerEvent event) {
     _collectedDts.add(dt);
@@ -80,7 +92,8 @@ class DataWriterService {
   Future<void> start() async {
     // Create new file
     final filePath = await _generateFilePath();
-    _outputFileSink = File(filePath).openWrite();
+    _outputFile = File(filePath);
+    _outputFileSink = _outputFile.openWrite();
     // Write header in gzip
     _outputFileSink.add(GZipCodec().encode(SensorData.csvHeader().codeUnits));
     await _outputFileSink.flush();
@@ -96,6 +109,8 @@ class DataWriterService {
     await flushCollectedData();
     // Close file
     await _outputFileSink.close();
+    // Send new file to the available data files stream
+    _dataFilesStreamController.add(_outputFile);
   }
 
   static String _generateFileName() {
@@ -121,5 +136,14 @@ class DataWriterService {
       fileDir.create();
     }
     return p.join(fileDir.path, _generateFileName());
+  }
+
+  Future<List<File>> _listAvailableDataFiles() async {
+    final directory = await _generateFileDirectory();
+    return directory
+        .list()
+        .where((entity) => entity is File)
+        .map((entity) => entity as File)
+        .toList();
   }
 }

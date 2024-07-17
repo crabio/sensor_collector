@@ -1,35 +1,34 @@
 part of 'bloc.dart';
 
-final class SensorCollectorState extends Equatable {
+final class SensorCollectorMobileState extends Equatable {
   final bool isWeareable;
   final bool isCollectingData;
   final Duration elapsed;
   final bool hasConnectedWearDevice;
-  final bool hasWearDeviceFilesforSync;
+  final int filesToSync;
 
-  const SensorCollectorState({
+  const SensorCollectorMobileState({
     this.isWeareable = false,
     this.isCollectingData = false,
     this.elapsed = const Duration(),
     this.hasConnectedWearDevice = false,
-    this.hasWearDeviceFilesforSync = false,
+    this.filesToSync = 0,
   });
 
-  SensorCollectorState copyWith({
+  SensorCollectorMobileState copyWith({
     bool? isWeareable,
     bool? isCollectingData,
     Duration? elapsed,
     bool? hasConnectedWearDevice,
-    bool? hasWearDeviceFilesforSync,
+    int? filesToSync,
   }) {
-    return SensorCollectorState(
+    return SensorCollectorMobileState(
       isWeareable: isWeareable ?? this.isWeareable,
       isCollectingData: isCollectingData ?? this.isCollectingData,
       elapsed: elapsed ?? this.elapsed,
       hasConnectedWearDevice:
           hasConnectedWearDevice ?? this.hasConnectedWearDevice,
-      hasWearDeviceFilesforSync:
-          hasWearDeviceFilesforSync ?? this.hasWearDeviceFilesforSync,
+      filesToSync: filesToSync ?? this.filesToSync,
     );
   }
 
@@ -39,6 +38,6 @@ final class SensorCollectorState extends Equatable {
         isCollectingData,
         elapsed,
         hasConnectedWearDevice,
-        hasWearDeviceFilesforSync,
+        filesToSync,
       ];
 }

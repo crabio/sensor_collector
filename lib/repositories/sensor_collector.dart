@@ -6,14 +6,14 @@ import 'package:sensors_plus/sensors_plus.dart';
 class SensorCollectorService {
   final Logger _log = Logger('SensorCollectorService');
 
-  final DataWriterService dataWriterService = DataWriterService();
+  final DataWriterService dataWriterService;
 
   late StreamSubscription<UserAccelerometerEvent> _userAccelerometerStream;
   late StreamSubscription<AccelerometerEvent> _accelerometerStream;
   late StreamSubscription<GyroscopeEvent> _gyroscopeStream;
   late StreamSubscription<MagnetometerEvent> _magnetometerStream;
 
-  SensorCollectorService();
+  SensorCollectorService(this.dataWriterService);
 
   void start([Duration sensorInterval = SensorInterval.normalInterval]) {
     _userAccelerometerStream =
