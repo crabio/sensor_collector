@@ -41,6 +41,7 @@ dependencies:
   equatable: ^2.0.5
   flutter_wear_os_connectivity: ^1.0.0
   device_info_plus: ^10.1.0
+  flutter_foreground_task: ^7.4.2
 
 dev_dependencies:
   flutter_test:
