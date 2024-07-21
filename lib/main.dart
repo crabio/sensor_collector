@@ -25,25 +25,34 @@ class SensorCollectorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MaterialApp(
+      home: WithForegroundTask(
+        child: Scaffold(
+          body: SensorCollectorBlocProvider(isWearable),
+        ),
+      ),
+    );
+  }
+}
+
+class SensorCollectorBlocProvider extends StatelessWidget {
+  final bool isWearable;
+
+  SensorCollectorBlocProvider(this.isWearable, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
     if (isWearable) {
       _log.info('Run wearable app');
-      return MaterialApp(
-        home: Scaffold(
-          body: BlocProvider(
-            create: (_) => SensorCollectorWearableBloc(),
-            child: const SensorCollectorWearablePage(),
-          ),
-        ),
+      return BlocProvider(
+        create: (_) => SensorCollectorWearableBloc(),
+        child: const SensorCollectorWearablePage(),
       );
     } else {
       _log.info('Run mobile app');
-      return MaterialApp(
-        home: Scaffold(
-          body: BlocProvider(
-            create: (_) => SensorCollectorMobileBloc(),
-            child: const SensorCollectorMobilePage(),
-          ),
-        ),
+      return BlocProvider(
+        create: (_) => SensorCollectorMobileBloc(),
+        child: const SensorCollectorMobilePage(),
       );
     }
   }
