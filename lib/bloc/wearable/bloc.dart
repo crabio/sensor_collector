@@ -46,7 +46,6 @@ class SensorCollectorWearableBloc
         .subscribeOnFileSyncAck()
         .listen((fileName) => add(FileSyncAck(fileName)));
     // Check we have already running foreground service
-    // TODO On running service at start we can;t join to it's channel
     if (await ForegroundService.isRunningService()) {
       _log.info('Foreground service is running');
       emit(state.copyWith(isCollectingData: true));
