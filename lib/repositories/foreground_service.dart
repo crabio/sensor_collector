@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:logging/logging.dart';
 import 'package:sensor_collector/repositories/sensor_collector_foreground_task.dart';
@@ -46,13 +45,10 @@ class ForegroundService {
       throw Exception('FlutterForegroundTask is already running');
     }
 
-    // Register the receivePort before starting the service.
-    final ReceivePort? receivePort = FlutterForegroundTask.receivePort;
-    if (receivePort == null) {
-      throw Exception('FlutterForegroundTask has no receivePort');
-    }
-    print('receivePort = $receivePort');
-    receivePort.listen(onReceiveData);
+    // Initialize port for communication between TaskHandler and UI.
+    FlutterForegroundTask.initCommunicationPort();
+    // Register onReceiveData callback
+    FlutterForegroundTask.addTaskDataCallback(onReceiveData);
 
     final requestResult = await FlutterForegroundTask.startService(
       notificationTitle: 'Sensor Collector',
