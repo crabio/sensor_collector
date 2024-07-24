@@ -43,12 +43,12 @@ class SensorCollectorService {
     dataWriterService.start();
   }
 
-  void stop() {
-    _userAccelerometerStream.cancel();
-    _accelerometerStream.cancel();
-    _gyroscopeStream.cancel();
-    _magnetometerStream.cancel();
-    dataWriterService.stop();
+  Future<void> stop() async {
+    await _userAccelerometerStream.cancel();
+    await _accelerometerStream.cancel();
+    await _gyroscopeStream.cancel();
+    await _magnetometerStream.cancel();
+    await dataWriterService.stop();
   }
 
   void _userAccelerometerEventHandler(UserAccelerometerEvent event) {

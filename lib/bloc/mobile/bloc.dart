@@ -104,7 +104,6 @@ class SensorCollectorMobileBloc
     SyncWearFiles event,
     Emitter<SensorCollectorMobileState> emit,
   ) async {
-    _log.fine('SyncWearFiles');
     emit(state.copyWith(isSynInProgress: true));
 
     state.filesToSync.forEach((fileName, file) {

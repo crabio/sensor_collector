@@ -48,8 +48,6 @@ class DataWriterService {
   }
 
   Future<void> flushCollectedData() async {
-    _log.fine('Flush collected data');
-
     // Lock mutex to prevent parallel file write
     await _mu.acquire();
 
@@ -91,18 +89,17 @@ class DataWriterService {
     await _outputFileSink.flush();
     // Start periodic flush to file
     _timer = Timer.periodic(flushPeriod, (t) => flushCollectedData());
+    // Send new file to the available data files stream
+    _dataFilesStreamController.add(_outputFile);
     _log.fine('Start periodic collected data flush. filePath = $filePath');
   }
 
   Future<void> stop() async {
-    _log.fine('Stop periodic collected data flush');
     _timer.cancel();
     // Flush data saved in buffer
     await flushCollectedData();
     // Close file
     await _outputFileSink.close();
-    // Send new file to the available data files stream
-    _dataFilesStreamController.add(_outputFile);
   }
 
   static Future<void> saveFileBytes(

@@ -77,7 +77,6 @@ class SensorCollectorWearableBloc
     NewDataFile event,
     Emitter<SensorCollectorWearableState> emit,
   ) {
-    _log.fine('_onNewDataFile: filename=${event.fileName}');
     final Map<String, File> availableFiles = {};
     availableFiles.addAll(state.availableFiles);
     if (!availableFiles.containsKey(event.fileName)) {
@@ -91,7 +90,6 @@ class SensorCollectorWearableBloc
     FileSyncAck event,
     Emitter<SensorCollectorWearableState> emit,
   ) async {
-    _log.fine('FileSyncAck: filename=${event.fileName}');
     final Map<String, File> availableFiles = {};
     availableFiles.addAll(state.availableFiles);
     availableFiles.remove(event.fileName);
@@ -104,8 +102,6 @@ class SensorCollectorWearableBloc
     EventFromForegroundService event,
     Emitter<SensorCollectorWearableState> emit,
   ) async {
-    _log.fine('DataFromForegroundService: data=${event.event}');
-
     switch (event.event.type) {
       case ForegroundServiceEventType.elapsedTime:
         final elapsedTimeEvent = event.event.elapsedTime!;

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
@@ -28,25 +27,23 @@ class SensorCollectorServiceTaskHandler extends TaskHandler {
     _log.info('SensorCollectorServiceTaskHandler.onStart');
 
     // Create new files listener
-    _dataWriterServiceStreamSubscription =
-        dataWriterService.dataFilesStream.listen((file) {
-      _log.fine(
-          'SensorCollectorServiceTaskHandler.dataFilesStream.send file=${basename(file.path)}');
-      sendPort?.send(ForegroundServiceEvent.newDataFile(file).toJson());
-    });
+    _dataWriterServiceStreamSubscription = dataWriterService.dataFilesStream
+        .listen((file) =>
+            sendPort?.send(ForegroundServiceEvent.newDataFile(file).toJson()));
     _startTimer(sendPort);
     // Start sensor collection
-    // TODO sensorCollectorService.start();
+    sensorCollectorService.start();
     _log.info('SensorCollectorServiceTaskHandler started');
   }
 
   // Called when the task is destroyed.
   @override
-  void onDestroy(DateTime timestamp, SendPort? sendPort) async {
+  Future<void> onDestroy(DateTime timestamp, SendPort? sendPort) async {
     _log.info('SensorCollectorServiceTaskHandler.onDestroy');
     _timer.cancel();
-    // TODO sensorCollectorService.stop();
-    _dataWriterServiceStreamSubscription.cancel();
+    await sensorCollectorService.stop();
+    await _dataWriterServiceStreamSubscription.cancel();
+    _log.info('SensorCollectorServiceTaskHandler.onDestroy exit');
   }
 
   @override
