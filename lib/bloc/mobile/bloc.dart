@@ -8,6 +8,7 @@ import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:logging/logging.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensor_collector/repositories/sensor_collector.dart';
+import 'package:sensor_collector/repositories/foreground_service.dart';
 import 'package:sensor_collector/repositories/wear_os_importer.dart';
 
 part 'event.dart';
@@ -16,8 +17,6 @@ part 'state.dart';
 class SensorCollectorMobileBloc
     extends Bloc<SensorCollectorMobileEvent, SensorCollectorMobileState> {
   final Logger _log = Logger('SensorCollectorMobileBloc');
-  final DataWriterService dataWriterService = DataWriterService();
-  late SensorCollectorService sensorCollectorService;
   late Ticker _ticker;
 
   final WearOsImporter _wearOsImporter = WearOsImporter();
@@ -32,8 +31,6 @@ class SensorCollectorMobileBloc
     on<WearDeviceConnected>(_onWearDeviceConnected);
     on<FileForSyncUpdate>(_onFileForSyncUpdate);
 
-    // Init late
-    sensorCollectorService = SensorCollectorService(dataWriterService);
     // Start init
     add(Init());
   }
@@ -49,23 +46,24 @@ class SensorCollectorMobileBloc
     Emitter<SensorCollectorMobileState> emit,
   ) async {
     await _wearOsImporter.init();
+    ForegroundService.initForegroundTask();
     _startWaitConnectedDevice();
   }
 
-  void _onPressCollectingButton(
+  Future<void> _onPressCollectingButton(
     PressCollectingButton event,
     Emitter<SensorCollectorMobileState> emit,
-  ) {
+  ) async {
     if (state.isCollectingData) {
       // Stop collecting data
+      await ForegroundService.stopForegroundTask();
       _ticker.stop();
-      sensorCollectorService.stop();
       emit(state.copyWith(isCollectingData: false));
     } else {
       // Start collecting data
+      await ForegroundService.startForegroundTask((event) => add(event));
       _ticker = Ticker((elapsed) => add(ElapsedTime(elapsed)));
       _ticker.start();
-      sensorCollectorService.start();
       // scs.start(SensorInterval.fastestInterval);
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
@@ -110,7 +108,7 @@ class SensorCollectorMobileBloc
     emit(state.copyWith(isSynInProgress: true));
 
     state.filesToSync.forEach((fileName, file) {
-      dataWriterService.saveFileBytes(fileName, file);
+      DataWriterService.saveFileBytes(fileName, file);
       _wearOsImporter.ackFileSynced(state.wearDevice!, fileName);
     });
 

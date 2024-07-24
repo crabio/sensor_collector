@@ -1,14 +1,21 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:isolate';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:logging/logging.dart';
-import 'package:sensor_collector/repositories/data_writer.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:sensor_collector/repositories/sensor_collector_foreground_task.dart';
+import 'package:sensor_collector/utils/log.dart';
+
+// The callback function should always be a top-level function.
+@pragma('vm:entry-point')
+void startCallback() {
+  // Init logger for foreground service
+  initLogger(level: Level.FINE);
+  FlutterForegroundTask.setTaskHandler(SensorCollectorServiceTaskHandler());
+}
 
 class ForegroundService {
-  final Logger _log = Logger('ForegroundService');
-
-  ForegroundService();
-
-  static void _initForegroundTask() {
+  static void initForegroundTask() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'sensor_collector',
@@ -22,29 +29,45 @@ class ForegroundService {
         playSound: false,
       ),
       foregroundTaskOptions: const ForegroundTaskOptions(
-        interval: 5000,
-        isOnceEvent: false,
+        isOnceEvent: true,
         autoRunOnBoot: true,
-        autoRunOnMyPackageReplaced: true,
-        allowWakeLock: true,
-        allowWifiLock: true,
       ),
     );
   }
 
-  void startForegroundTask() {
-    FlutterForegroundTask.startService(
+  static Future<void> startForegroundTask(
+      void Function(dynamic event) onReceiveData) async {
+    print('${DateTime.now()} startForegroundTask');
+    if (await FlutterForegroundTask.isRunningService) {
+      throw Exception('FlutterForegroundTask is already running');
+    }
+
+    // Register the receivePort before starting the service.
+    final ReceivePort? receivePort = FlutterForegroundTask.receivePort;
+    if (receivePort == null) {
+      throw Exception('FlutterForegroundTask has no receivePort');
+    }
+    print('receivePort = $receivePort');
+    receivePort.listen(onReceiveData);
+
+    final requestResult = await FlutterForegroundTask.startService(
       notificationTitle: 'Sensor Collector',
       notificationText: 'Collecting sensor data...',
-      callback: start,
+      callback: startCallback,
     );
+    if (!requestResult.success) {
+      throw Exception(
+          "Couldn't start FlutterForegroundTask: ${requestResult.error}");
+    }
+    print('${DateTime.now()} started ForegroundTask');
   }
 
-  void stopForegroundTask() {
-    FlutterForegroundTask.stopService();
+  static Future<void> stopForegroundTask() async {
+    print('stopForegroundTask');
+    await FlutterForegroundTask.stopService();
   }
 
-  Future<void> requestPermissionForAndroid() async {
+  static Future<void> requestPermission() async {
     if (!Platform.isAndroid) {
       return;
     }
@@ -64,10 +87,4 @@ class ForegroundService {
       await FlutterForegroundTask.requestNotificationPermission();
     }
   }
-}
-
-// The callback function should always be a top-level function.
-@pragma('vm:entry-point')
-void startCallback() {
-  FlutterForegroundTask.setTaskHandler(SensorCollectorServiceTaskHandler());
 }

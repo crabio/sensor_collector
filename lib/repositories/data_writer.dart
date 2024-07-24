@@ -27,14 +27,6 @@ class DataWriterService {
 
   DataWriterService({this.flushPeriod = const Duration(seconds: 1)});
 
-  Future<void> init() async {
-    // Add all available data files to the stream
-    final availableDataFilesPaths = await _listAvailableDataFiles();
-    for (var dataFilePath in availableDataFilesPaths) {
-      _dataFilesStreamController.add(dataFilePath);
-    }
-  }
-
   void addUserAccelerometerEvent(DateTime dt, UserAccelerometerEvent event) {
     _collectedDts.add(dt);
     _userAccelerometerBuffer[dt] = event;
@@ -113,10 +105,10 @@ class DataWriterService {
     _dataFilesStreamController.add(_outputFile);
   }
 
-  Future<void> saveFileBytes(final String fileName, final File file) async {
+  static Future<void> saveFileBytes(
+      final String fileName, final File file) async {
     final filePath = await _generateFilePath(fileName);
     File(filePath).writeAsBytesSync(file.readAsBytesSync());
-    _log.fine('File saved to $filePath');
   }
 
   static String _generateFileName() {
@@ -144,7 +136,7 @@ class DataWriterService {
     return p.join(fileDir.path, fileName);
   }
 
-  Future<List<File>> _listAvailableDataFiles() async {
+  static Future<List<File>> listAvailableDataFiles() async {
     final directory = await _generateFileDirectory();
     return directory
         .list()

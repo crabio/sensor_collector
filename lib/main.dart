@@ -4,7 +4,7 @@ import 'package:flutter_foreground_task/ui/with_foreground_task.dart';
 import 'package:logging/logging.dart';
 import 'package:sensor_collector/bloc/mobile/bloc.dart';
 import 'package:sensor_collector/bloc/wearable/bloc.dart';
-import 'package:sensor_collector/repositories/sensor_collector_foreground_service.dart';
+import 'package:sensor_collector/repositories/foreground_service.dart';
 import 'package:sensor_collector/utils/log.dart';
 import 'package:sensor_collector/utils/platform.dart';
 import 'package:sensor_collector/view/page/mobile_page.dart';
@@ -16,7 +16,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Request required permissions
-  await SensorCollectorForegroundService.requestPermission();
+  await ForegroundService.requestPermission();
 
   runApp(SensorCollectorApp(await isWearable()));
 }
