@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
+import 'package:sensor_collector/models/foreground_service_events.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
-import 'package:sensor_collector/repositories/sensor_collector.dart';
+import 'package:sensor_collector/repositories/foreground_service.dart';
 import 'package:sensor_collector/repositories/wear_os_exporter.dart';
 
 part 'event.dart';
@@ -16,10 +16,6 @@ part 'state.dart';
 class SensorCollectorWearableBloc
     extends Bloc<SensorCollectorWearableEvent, SensorCollectorWearableState> {
   final Logger _log = Logger('SensorCollectorWearableBloc');
-  final DataWriterService dataWriterService = DataWriterService();
-  late SensorCollectorService sensorCollectorService;
-  late Ticker _ticker;
-
   final WearOsExporter _wearOsExporter = WearOsExporter();
 
   SensorCollectorWearableBloc() : super(const SensorCollectorWearableState()) {
@@ -28,12 +24,8 @@ class SensorCollectorWearableBloc
     on<ElapsedTime>(_onElapsedTime);
     on<NewDataFile>(_onNewDataFile);
     on<FileSyncAck>(_onFileSyncAck);
+    on<EventFromForegroundService>(_onEventFromForegroundService);
 
-    dataWriterService.dataFilesStream
-        .listen((file) => add(NewDataFile(file, basename(file.path))));
-
-    // Init late
-    sensorCollectorService = SensorCollectorService(dataWriterService);
     // Start init
     add(Init());
   }
@@ -44,28 +36,35 @@ class SensorCollectorWearableBloc
   ) async {
     // On wearable device init exporter
     await _wearOsExporter.init();
-    await dataWriterService.init();
+    // Read existed files
+    for (final file in await DataWriterService.listAvailableDataFiles()) {
+      add(NewDataFile(file, basename(file.path)));
+    }
+    ForegroundService.initForegroundTask();
     _wearOsExporter.exportDataItems({});
     _wearOsExporter
         .subscribeOnFileSyncAck()
         .listen((fileName) => add(FileSyncAck(fileName)));
+    // Check we have already running foreground service
+    if (await ForegroundService.isRunningService()) {
+      _log.info('Foreground service is running');
+      emit(state.copyWith(isCollectingData: true));
+    }
   }
 
-  void _onPressCollectingButton(
+  Future<void> _onPressCollectingButton(
     PressCollectingButton event,
     Emitter<SensorCollectorWearableState> emit,
-  ) {
+  ) async {
     if (state.isCollectingData) {
       // Stop collecting data
-      _ticker.stop();
-      sensorCollectorService.stop();
+      await ForegroundService.stopForegroundTask();
       emit(state.copyWith(isCollectingData: false));
     } else {
       // Start collecting data
-      _ticker = Ticker((elapsed) => add(ElapsedTime(elapsed)));
-      _ticker.start();
-      sensorCollectorService.start();
-      // scs.start(SensorInterval.fastestInterval);
+      await ForegroundService.startForegroundTask((eventJson) => add(
+          EventFromForegroundService(
+              ForegroundServiceEvent.fromJson(eventJson))));
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
   }
@@ -81,7 +80,6 @@ class SensorCollectorWearableBloc
     NewDataFile event,
     Emitter<SensorCollectorWearableState> emit,
   ) {
-    _log.fine('_onNewDataFile: filename=${event.fileName}');
     final Map<String, File> availableFiles = {};
     availableFiles.addAll(state.availableFiles);
     if (!availableFiles.containsKey(event.fileName)) {
@@ -95,12 +93,33 @@ class SensorCollectorWearableBloc
     FileSyncAck event,
     Emitter<SensorCollectorWearableState> emit,
   ) async {
-    _log.fine('FileSyncAck: filename=${event.fileName}');
     final Map<String, File> availableFiles = {};
     availableFiles.addAll(state.availableFiles);
     availableFiles.remove(event.fileName);
     await File(state.availableFiles[event.fileName]!.path).delete();
     emit(state.copyWith(availableFiles: availableFiles));
     _wearOsExporter.exportDataItems(availableFiles);
+  }
+
+  Future<void> _onEventFromForegroundService(
+    EventFromForegroundService event,
+    Emitter<SensorCollectorWearableState> emit,
+  ) async {
+    switch (event.event.type) {
+      case ForegroundServiceEventType.elapsedTime:
+        final elapsedTimeEvent = event.event.elapsedTime!;
+        add(ElapsedTime(elapsedTimeEvent.elapsed));
+        break;
+      case ForegroundServiceEventType.newDataFile:
+        final newDataFileEvent = event.event.newDataFile!;
+        add(NewDataFile(
+          newDataFileEvent.file,
+          basename(newDataFileEvent.file.path),
+        ));
+        break;
+      default:
+        throw Exception(
+            'Unknown DataFromForegroundService data type: ${event.event.runtimeType}');
+    }
   }
 }

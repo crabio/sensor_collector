@@ -38,3 +38,12 @@ final class FileSyncAck extends SensorCollectorWearableEvent {
   @override
   List<Object> get props => [fileName];
 }
+
+final class EventFromForegroundService extends SensorCollectorWearableEvent {
+  final ForegroundServiceEvent event;
+
+  const EventFromForegroundService(this.event);
+
+  @override
+  List<Object> get props => [event];
+}

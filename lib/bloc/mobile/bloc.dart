@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
-import 'package:logging/logging.dart';
+import 'package:sensor_collector/models/foreground_service_events.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
-import 'package:sensor_collector/repositories/sensor_collector.dart';
+import 'package:sensor_collector/repositories/foreground_service.dart';
 import 'package:sensor_collector/repositories/wear_os_importer.dart';
 
 part 'event.dart';
@@ -15,11 +14,6 @@ part 'state.dart';
 
 class SensorCollectorMobileBloc
     extends Bloc<SensorCollectorMobileEvent, SensorCollectorMobileState> {
-  final Logger _log = Logger('SensorCollectorMobileBloc');
-  final DataWriterService dataWriterService = DataWriterService();
-  late SensorCollectorService sensorCollectorService;
-  late Ticker _ticker;
-
   final WearOsImporter _wearOsImporter = WearOsImporter();
 
   StreamSubscription<WearOsDevice>? _connectedDeviceSubscription;
@@ -31,9 +25,8 @@ class SensorCollectorMobileBloc
     on<ElapsedTime>(_onElapsedTime);
     on<WearDeviceConnected>(_onWearDeviceConnected);
     on<FileForSyncUpdate>(_onFileForSyncUpdate);
+    on<EventFromForegroundService>(_onEventFromForegroundService);
 
-    // Init late
-    sensorCollectorService = SensorCollectorService(dataWriterService);
     // Start init
     add(Init());
   }
@@ -49,24 +42,25 @@ class SensorCollectorMobileBloc
     Emitter<SensorCollectorMobileState> emit,
   ) async {
     await _wearOsImporter.init();
+    ForegroundService.initForegroundTask();
     _startWaitConnectedDevice();
+    // Check we have already running foreground service
+    if (await ForegroundService.isRunningService()) {
+      emit(state.copyWith(isCollectingData: false));
+    }
   }
 
-  void _onPressCollectingButton(
+  Future<void> _onPressCollectingButton(
     PressCollectingButton event,
     Emitter<SensorCollectorMobileState> emit,
-  ) {
+  ) async {
     if (state.isCollectingData) {
       // Stop collecting data
-      _ticker.stop();
-      sensorCollectorService.stop();
+      await ForegroundService.stopForegroundTask();
       emit(state.copyWith(isCollectingData: false));
     } else {
       // Start collecting data
-      _ticker = Ticker((elapsed) => add(ElapsedTime(elapsed)));
-      _ticker.start();
-      sensorCollectorService.start();
-      // scs.start(SensorInterval.fastestInterval);
+      await ForegroundService.startForegroundTask((event) => add(event));
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
   }
@@ -106,11 +100,10 @@ class SensorCollectorMobileBloc
     SyncWearFiles event,
     Emitter<SensorCollectorMobileState> emit,
   ) async {
-    _log.fine('SyncWearFiles');
     emit(state.copyWith(isSynInProgress: true));
 
     state.filesToSync.forEach((fileName, file) {
-      dataWriterService.saveFileBytes(fileName, file);
+      DataWriterService.saveFileBytes(fileName, file);
       _wearOsImporter.ackFileSynced(state.wearDevice!, fileName);
     });
 
@@ -125,5 +118,23 @@ class SensorCollectorMobileBloc
 
   void _stopWaitConnectedDevice() {
     _connectedDeviceSubscription?.cancel();
+  }
+
+  Future<void> _onEventFromForegroundService(
+    EventFromForegroundService event,
+    Emitter<SensorCollectorMobileState> emit,
+  ) async {
+    switch (event.event.type) {
+      case ForegroundServiceEventType.elapsedTime:
+        final elapsedTimeEvent = event.event.elapsedTime!;
+        add(ElapsedTime(elapsedTimeEvent.elapsed));
+        break;
+      case ForegroundServiceEventType.newDataFile:
+        // ignore
+        break;
+      default:
+        throw Exception(
+            'Unknown DataFromForegroundService data type: ${event.event.runtimeType}');
+    }
   }
 }

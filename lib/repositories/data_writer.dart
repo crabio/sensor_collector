@@ -27,14 +27,6 @@ class DataWriterService {
 
   DataWriterService({this.flushPeriod = const Duration(seconds: 1)});
 
-  Future<void> init() async {
-    // Add all available data files to the stream
-    final availableDataFilesPaths = await _listAvailableDataFiles();
-    for (var dataFilePath in availableDataFilesPaths) {
-      _dataFilesStreamController.add(dataFilePath);
-    }
-  }
-
   void addUserAccelerometerEvent(DateTime dt, UserAccelerometerEvent event) {
     _collectedDts.add(dt);
     _userAccelerometerBuffer[dt] = event;
@@ -57,7 +49,6 @@ class DataWriterService {
 
   Future<void> flushCollectedData() async {
     _log.fine('Flush collected data');
-
     // Lock mutex to prevent parallel file write
     await _mu.acquire();
 
@@ -90,6 +81,7 @@ class DataWriterService {
   }
 
   Future<void> start() async {
+    _log.info('Start');
     // Create new file
     final filePath = await _generateFilePath(_generateFileName());
     _outputFile = File(filePath);
@@ -99,24 +91,24 @@ class DataWriterService {
     await _outputFileSink.flush();
     // Start periodic flush to file
     _timer = Timer.periodic(flushPeriod, (t) => flushCollectedData());
+    // Send new file to the available data files stream
+    _dataFilesStreamController.add(_outputFile);
     _log.fine('Start periodic collected data flush. filePath = $filePath');
   }
 
   Future<void> stop() async {
-    _log.fine('Stop periodic collected data flush');
+    _log.info('Stop');
     _timer.cancel();
     // Flush data saved in buffer
     await flushCollectedData();
     // Close file
     await _outputFileSink.close();
-    // Send new file to the available data files stream
-    _dataFilesStreamController.add(_outputFile);
   }
 
-  Future<void> saveFileBytes(final String fileName, final File file) async {
+  static Future<void> saveFileBytes(
+      final String fileName, final File file) async {
     final filePath = await _generateFilePath(fileName);
     File(filePath).writeAsBytesSync(file.readAsBytesSync());
-    _log.fine('File saved to $filePath');
   }
 
   static String _generateFileName() {
@@ -144,7 +136,7 @@ class DataWriterService {
     return p.join(fileDir.path, fileName);
   }
 
-  Future<List<File>> _listAvailableDataFiles() async {
+  static Future<List<File>> listAvailableDataFiles() async {
     final directory = await _generateFileDirectory();
     return directory
         .list()
