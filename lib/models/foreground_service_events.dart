@@ -22,11 +22,10 @@ class ForegroundServiceEvent {
 
   factory ForegroundServiceEvent.newDataFile(
     final File file,
-    final String fileName,
   ) {
     return ForegroundServiceEvent(
       ForegroundServiceEventType.newDataFile,
-      newDataFile: NewDataFile(file, fileName),
+      newDataFile: NewDataFile(file),
     );
   }
 
@@ -38,10 +37,7 @@ class ForegroundServiceEvent {
           Duration(seconds: json['elapsedSeconds']),
         );
       case 'ForegroundServiceEventType.newDataFile':
-        return ForegroundServiceEvent.newDataFile(
-          json['file'],
-          json['fileName'],
-        );
+        return ForegroundServiceEvent.newDataFile(File(json['filePath']));
       default:
         throw Exception('Unknown ForegroundServiceEventType: ${json['type']}');
     }
@@ -57,8 +53,7 @@ class ForegroundServiceEvent {
       case ForegroundServiceEventType.newDataFile:
         return {
           'type': type.toString(),
-          'file': newDataFile!.file,
-          'fileName': newDataFile!.fileName,
+          'filePath': newDataFile!.file.path,
         };
       default:
         throw Exception('Unknown ForegroundServiceEventType: $type');
@@ -74,7 +69,6 @@ class ElapsedTime {
 
 class NewDataFile {
   final File file;
-  final String fileName;
 
-  NewDataFile(this.file, this.fileName);
+  NewDataFile(this.file);
 }

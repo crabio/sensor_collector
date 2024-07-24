@@ -32,9 +32,7 @@ class SensorCollectorServiceTaskHandler extends TaskHandler {
         dataWriterService.dataFilesStream.listen((file) {
       _log.fine(
           'SensorCollectorServiceTaskHandler.dataFilesStream.send file=${basename(file.path)}');
-      sendPort?.send(
-          ForegroundServiceEvent.newDataFile(file, basename(file.path))
-              .toJson());
+      sendPort?.send(ForegroundServiceEvent.newDataFile(file).toJson());
     });
     _startTimer(sendPort);
     // Start sensor collection

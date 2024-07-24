@@ -113,7 +113,10 @@ class SensorCollectorWearableBloc
         break;
       case ForegroundServiceEventType.newDataFile:
         final newDataFileEvent = event.event.newDataFile!;
-        add(NewDataFile(newDataFileEvent.file, newDataFileEvent.fileName));
+        add(NewDataFile(
+          newDataFileEvent.file,
+          basename(newDataFileEvent.file.path),
+        ));
         break;
       default:
         throw Exception(
