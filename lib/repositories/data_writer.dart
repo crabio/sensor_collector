@@ -48,6 +48,7 @@ class DataWriterService {
   }
 
   Future<void> flushCollectedData() async {
+    _log.fine('Flush collected data');
     // Lock mutex to prevent parallel file write
     await _mu.acquire();
 
@@ -80,6 +81,7 @@ class DataWriterService {
   }
 
   Future<void> start() async {
+    _log.info('Start');
     // Create new file
     final filePath = await _generateFilePath(_generateFileName());
     _outputFile = File(filePath);
@@ -95,6 +97,7 @@ class DataWriterService {
   }
 
   Future<void> stop() async {
+    _log.info('Stop');
     _timer.cancel();
     // Flush data saved in buffer
     await flushCollectedData();

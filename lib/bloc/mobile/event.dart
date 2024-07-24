@@ -40,3 +40,12 @@ final class FileForSyncUpdate extends SensorCollectorMobileEvent {
   @override
   List<Object> get props => [filesMap];
 }
+
+final class EventFromForegroundService extends SensorCollectorMobileEvent {
+  final ForegroundServiceEvent event;
+
+  const EventFromForegroundService(this.event);
+
+  @override
+  List<Object> get props => [event];
+}

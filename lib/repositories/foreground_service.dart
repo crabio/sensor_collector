@@ -35,6 +35,10 @@ class ForegroundService {
     );
   }
 
+  static Future<bool> isRunningService() async {
+    return await FlutterForegroundTask.isRunningService;
+  }
+
   static Future<void> startForegroundTask(
       void Function(dynamic event) onReceiveData) async {
     print('${DateTime.now()} startForegroundTask');

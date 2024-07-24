@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
@@ -17,7 +16,6 @@ part 'state.dart';
 class SensorCollectorWearableBloc
     extends Bloc<SensorCollectorWearableEvent, SensorCollectorWearableState> {
   final Logger _log = Logger('SensorCollectorWearableBloc');
-
   final WearOsExporter _wearOsExporter = WearOsExporter();
 
   SensorCollectorWearableBloc() : super(const SensorCollectorWearableState()) {
@@ -47,6 +45,12 @@ class SensorCollectorWearableBloc
     _wearOsExporter
         .subscribeOnFileSyncAck()
         .listen((fileName) => add(FileSyncAck(fileName)));
+    // Check we have already running foreground service
+    // TODO On running service at start we can;t join to it's channel
+    if (await ForegroundService.isRunningService()) {
+      _log.info('Foreground service is running');
+      emit(state.copyWith(isCollectingData: true));
+    }
   }
 
   Future<void> _onPressCollectingButton(

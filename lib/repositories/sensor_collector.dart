@@ -16,6 +16,7 @@ class SensorCollectorService {
   SensorCollectorService(this.dataWriterService);
 
   void start([Duration sensorInterval = SensorInterval.normalInterval]) {
+    _log.info('Start');
     _userAccelerometerStream =
         userAccelerometerEventStream(samplingPeriod: sensorInterval).listen(
       _userAccelerometerEventHandler,
@@ -44,6 +45,7 @@ class SensorCollectorService {
   }
 
   Future<void> stop() async {
+    _log.info('Stop');
     await _userAccelerometerStream.cancel();
     await _accelerometerStream.cancel();
     await _gyroscopeStream.cancel();
