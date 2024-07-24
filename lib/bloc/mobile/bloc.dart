@@ -61,7 +61,6 @@ class SensorCollectorMobileBloc
     } else {
       // Start collecting data
       await ForegroundService.startForegroundTask((event) => add(event));
-      // scs.start(SensorInterval.fastestInterval);
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
   }
