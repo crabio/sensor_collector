@@ -11,3 +11,10 @@ Files from Smart Watches will be synced to the smartphone.
 - mobile app scans periodically connected smart watch with same app
 - if app on mobile app detects files for sync on smart watches they can be synced
 - after sync to mobile device, files on smart watch will be deleted
+
+## Development
+
+### Add splash screen
+
+1. Configure splash screen via `flutter_native_splash.yaml` config file
+2. RUn command `dart run flutter_native_splash:create`
