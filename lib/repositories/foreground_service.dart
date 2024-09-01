@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/web.dart';
 import 'package:sensor_collector/repositories/sensor_collector_foreground_task.dart';
-import 'package:sensor_collector/utils/log.dart';
 
 // The callback function should always be a top-level function.
 @pragma('vm:entry-point')
 void startCallback() {
   // Init logger for foreground service
-  initLogger(level: Level.FINE);
+  Logger.level = Level.debug;
   FlutterForegroundTask.setTaskHandler(SensorCollectorServiceTaskHandler());
 }
 
@@ -40,7 +39,6 @@ class ForegroundService {
 
   static Future<void> startForegroundTask(
       void Function(dynamic event) onReceiveData) async {
-    print('${DateTime.now()} startForegroundTask');
     if (await FlutterForegroundTask.isRunningService) {
       throw Exception('FlutterForegroundTask is already running');
     }
@@ -59,11 +57,28 @@ class ForegroundService {
       throw Exception(
           "Couldn't start FlutterForegroundTask: ${requestResult.error}");
     }
-    print('${DateTime.now()} started ForegroundTask');
+  }
+
+  static Future<void> joinForegroundTask(
+      void Function(dynamic event) onReceiveData) async {
+    if (!await FlutterForegroundTask.isRunningService) {
+      throw Exception('FlutterForegroundTask is not running');
+    }
+
+    // Initialize port for communication between TaskHandler and UI.
+    FlutterForegroundTask.initCommunicationPort();
+    // Register onReceiveData callback
+    FlutterForegroundTask.addTaskDataCallback(onReceiveData);
+
+    final requestResult =
+        await FlutterForegroundTask.updateService(callback: startCallback);
+    if (!requestResult.success) {
+      throw Exception(
+          "Couldn't update FlutterForegroundTask: ${requestResult.error}");
+    }
   }
 
   static Future<void> stopForegroundTask() async {
-    print('stopForegroundTask');
     await FlutterForegroundTask.stopService();
   }
 

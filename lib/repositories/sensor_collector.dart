@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'package:logging/logging.dart';
+import 'package:logger/web.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 class SensorCollectorService {
-  final Logger _log = Logger('SensorCollectorService');
+  final Logger _log = Logger();
 
   final DataWriterService dataWriterService;
 
@@ -16,7 +16,7 @@ class SensorCollectorService {
   SensorCollectorService(this.dataWriterService);
 
   void start([Duration sensorInterval = SensorInterval.normalInterval]) {
-    _log.info('Start');
+    _log.i('Start');
     _userAccelerometerStream =
         userAccelerometerEventStream(samplingPeriod: sensorInterval).listen(
       _userAccelerometerEventHandler,
@@ -45,7 +45,7 @@ class SensorCollectorService {
   }
 
   Future<void> stop() async {
-    _log.info('Stop');
+    _log.i('Stop');
     await _userAccelerometerStream.cancel();
     await _accelerometerStream.cancel();
     await _gyroscopeStream.cancel();
@@ -58,7 +58,7 @@ class SensorCollectorService {
   }
 
   void _userAccelerometerErrorHandler(Object err) {
-    _log.severe("ERROR - User Accelerometer Error: ${err.toString()}");
+    _log.e("ERROR - User Accelerometer Error: ${err.toString()}");
   }
 
   void _accelerometerEventHandler(AccelerometerEvent event) {
@@ -66,7 +66,7 @@ class SensorCollectorService {
   }
 
   void _accelerometerErrorHandler(Object err) {
-    _log.severe("ERROR - Accelerometer Error: ${err.toString()}");
+    _log.e("ERROR - Accelerometer Error: ${err.toString()}");
   }
 
   void _gyroscopeEventHandler(GyroscopeEvent event) {
@@ -74,7 +74,7 @@ class SensorCollectorService {
   }
 
   void _gyroscopeErrorHandler(Object err) {
-    _log.severe("ERROR - Gyroscope Error: ${err.toString()}");
+    _log.e("ERROR - Gyroscope Error: ${err.toString()}");
   }
 
   void _magnetometerEventHandler(MagnetometerEvent event) {
@@ -82,6 +82,6 @@ class SensorCollectorService {
   }
 
   void _magnetometerErrorHandler(Object err) {
-    _log.severe("ERROR - Magnetometer Error: ${err.toString()}");
+    _log.e("ERROR - Magnetometer Error: ${err.toString()}");
   }
 }
