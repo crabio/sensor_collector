@@ -49,6 +49,12 @@ class SensorCollectorServiceTaskHandler extends TaskHandler {
         'SensorCollectorServiceTaskHandler.onRepeatEvent: NotImplemented');
   }
 
+  @override
+  void onNotificationPressed() {
+    _log.info('SensorCollectorServiceTaskHandler.onNotificationPressed');
+    FlutterForegroundTask.launchApp('/');
+  }
+
   void _startTimer() {
     _timer = Timer(const Duration(seconds: 1), () {
       final Duration elapsed = DateTime.now().difference(_startedAt);
