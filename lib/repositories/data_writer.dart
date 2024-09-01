@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/web.dart';
 import 'package:sensor_collector/models/sensor_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -9,7 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:mutex/mutex.dart';
 
 class DataWriterService {
-  final Logger _log = Logger('DataWriterService');
+  final Logger _log = Logger();
   final Set<DateTime> _collectedDts = {};
   final Map<DateTime, UserAccelerometerEvent> _userAccelerometerBuffer = {};
   final Map<DateTime, AccelerometerEvent> _accelerometerBuffer = {};
@@ -48,7 +48,7 @@ class DataWriterService {
   }
 
   Future<void> flushCollectedData() async {
-    _log.fine('Flush collected data');
+    _log.d('Flush collected data');
     // Lock mutex to prevent parallel file write
     await _mu.acquire();
 
@@ -81,7 +81,7 @@ class DataWriterService {
   }
 
   Future<void> start() async {
-    _log.info('Start');
+    _log.i('Start');
     // Create new file
     final filePath = await _generateFilePath(_generateFileName());
     _outputFile = File(filePath);
@@ -93,11 +93,11 @@ class DataWriterService {
     _timer = Timer.periodic(flushPeriod, (t) => flushCollectedData());
     // Send new file to the available data files stream
     _dataFilesStreamController.add(_outputFile);
-    _log.fine('Start periodic collected data flush. filePath = $filePath');
+    _log.d('Start periodic collected data flush. filePath = $filePath');
   }
 
   Future<void> stop() async {
-    _log.info('Stop');
+    _log.i('Stop');
     _timer.cancel();
     // Flush data saved in buffer
     await flushCollectedData();

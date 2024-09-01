@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/web.dart';
 import 'package:path/path.dart';
 import 'package:sensor_collector/models/foreground_service_events.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
@@ -15,7 +15,7 @@ part 'state.dart';
 
 class SensorCollectorWearableBloc
     extends Bloc<SensorCollectorWearableEvent, SensorCollectorWearableState> {
-  final Logger _log = Logger('SensorCollectorWearableBloc');
+  final Logger _log = Logger();
   final WearOsExporter _wearOsExporter = WearOsExporter();
 
   SensorCollectorWearableBloc() : super(const SensorCollectorWearableState()) {
@@ -47,7 +47,7 @@ class SensorCollectorWearableBloc
         .listen((fileName) => add(FileSyncAck(fileName)));
     // Check we have already running foreground service
     if (await ForegroundService.isRunningService()) {
-      _log.info('Foreground service is running');
+      _log.i('Foreground service is running');
       emit(state.copyWith(isCollectingData: true));
     }
   }
@@ -62,9 +62,9 @@ class SensorCollectorWearableBloc
       emit(state.copyWith(isCollectingData: false));
     } else {
       // Start collecting data
-      await ForegroundService.startForegroundTask((eventJson) => add(
+      await ForegroundService.startForegroundTask((jsonData) => add(
           EventFromForegroundService(
-              ForegroundServiceEvent.fromJson(eventJson))));
+              ForegroundServiceEvent.fromJson(jsonData))));
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
   }

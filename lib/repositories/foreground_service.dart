@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/web.dart';
 import 'package:sensor_collector/repositories/sensor_collector_foreground_task.dart';
-import 'package:sensor_collector/utils/log.dart';
 
 // The callback function should always be a top-level function.
 @pragma('vm:entry-point')
 void startCallback() {
   // Init logger for foreground service
-  initLogger(level: Level.FINE);
+  Logger.level = Level.debug;
   FlutterForegroundTask.setTaskHandler(SensorCollectorServiceTaskHandler());
 }
 
@@ -59,11 +58,9 @@ class ForegroundService {
       throw Exception(
           "Couldn't start FlutterForegroundTask: ${requestResult.error}");
     }
-    print('${DateTime.now()} started ForegroundTask');
   }
 
   static Future<void> stopForegroundTask() async {
-    print('stopForegroundTask');
     await FlutterForegroundTask.stopService();
   }
 

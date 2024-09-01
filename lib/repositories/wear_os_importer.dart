@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/web.dart';
 import 'package:sensor_collector/repositories/wear_os_service.dart';
 
 // Class for importing files from remote wearable device
 class WearOsImporter extends WearOsService {
-  final Logger _log = Logger('WearOsConnectorImporter');
+  final Logger _log = Logger();
 
   Stream<WearOsDevice> waitDevice() {
     late Timer scanTimer;
@@ -29,15 +29,15 @@ class WearOsImporter extends WearOsService {
     List<WearOsDevice> connectedDevices =
         await flutterWearOsConnectivity.getConnectedDevices();
     if (connectedDevices.isEmpty) {
-      _log.fine('No connected devices');
+      _log.d('No connected devices');
       return null;
     } else {
       for (var device in connectedDevices) {
-        _log.fine(
+        _log.d(
             'Check connected device: ${device.id} ${device.name} ${device.isNearby}');
         // Check that connected device has required DataItem
         if (await _deviceHasDataItem(device)) {
-          _log.fine(
+          _log.d(
               'Found supported device: ${device.id} ${device.name} ${device.isNearby}');
           return device;
         }
@@ -83,7 +83,7 @@ class WearOsImporter extends WearOsService {
       path: "/sensor-collector-synced-file",
       priority: MessagePriority.low,
     );
-    _log.fine('Sent ack on synced file $fileName to device ${device.name}');
+    _log.d('Sent ack on synced file $fileName to device ${device.name}');
   }
 
   Uri _dataItemUri(final WearOsDevice device) {

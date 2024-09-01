@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
+import 'package:logger/web.dart';
 import 'package:sensor_collector/models/foreground_service_events.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensor_collector/repositories/foreground_service.dart';
@@ -14,6 +15,7 @@ part 'state.dart';
 
 class SensorCollectorMobileBloc
     extends Bloc<SensorCollectorMobileEvent, SensorCollectorMobileState> {
+  final Logger _log = Logger();
   final WearOsImporter _wearOsImporter = WearOsImporter();
 
   StreamSubscription<WearOsDevice>? _connectedDeviceSubscription;
@@ -46,7 +48,8 @@ class SensorCollectorMobileBloc
     _startWaitConnectedDevice();
     // Check we have already running foreground service
     if (await ForegroundService.isRunningService()) {
-      emit(state.copyWith(isCollectingData: false));
+      _log.i('Foreground service is running');
+      emit(state.copyWith(isCollectingData: true));
     }
   }
 
