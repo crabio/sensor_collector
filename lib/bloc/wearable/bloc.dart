@@ -30,6 +30,10 @@ class SensorCollectorWearableBloc
     add(Init());
   }
 
+  void _foregroundServiceOnReceiveDataCallback(dynamic jsonData) {
+    add(EventFromForegroundService(ForegroundServiceEvent.fromJson(jsonData)));
+  }
+
   Future<void> _onInit(
     Init event,
     Emitter<SensorCollectorWearableState> emit,
@@ -49,6 +53,8 @@ class SensorCollectorWearableBloc
     if (await ForegroundService.isRunningService()) {
       _log.i('Foreground service is running');
       emit(state.copyWith(isCollectingData: true));
+      await ForegroundService.joinForegroundTask(
+          _foregroundServiceOnReceiveDataCallback);
     }
   }
 
@@ -62,9 +68,8 @@ class SensorCollectorWearableBloc
       emit(state.copyWith(isCollectingData: false));
     } else {
       // Start collecting data
-      await ForegroundService.startForegroundTask((jsonData) => add(
-          EventFromForegroundService(
-              ForegroundServiceEvent.fromJson(jsonData))));
+      await ForegroundService.startForegroundTask(
+          _foregroundServiceOnReceiveDataCallback);
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
   }

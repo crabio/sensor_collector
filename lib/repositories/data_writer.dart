@@ -48,7 +48,6 @@ class DataWriterService {
   }
 
   Future<void> flushCollectedData() async {
-    _log.d('Flush collected data');
     // Lock mutex to prevent parallel file write
     await _mu.acquire();
 

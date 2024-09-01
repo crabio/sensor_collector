@@ -57,7 +57,7 @@ class SensorCollectorServiceTaskHandler extends TaskHandler {
   void _startTimer() {
     _timer = Timer(const Duration(seconds: 1), () {
       final Duration elapsed = DateTime.now().difference(_startedAt);
-      _log.i('SensorCollectorServiceTaskHandler.ticker elapsed=$elapsed');
+      _log.d('SensorCollectorServiceTaskHandler.ticker elapsed=$elapsed');
       FlutterForegroundTask.sendDataToMain(
           ForegroundServiceEvent.elapsedTime(elapsed).toJson());
       FlutterForegroundTask.updateService(

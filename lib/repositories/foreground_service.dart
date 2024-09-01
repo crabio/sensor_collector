@@ -39,7 +39,6 @@ class ForegroundService {
 
   static Future<void> startForegroundTask(
       void Function(dynamic event) onReceiveData) async {
-    print('${DateTime.now()} startForegroundTask');
     if (await FlutterForegroundTask.isRunningService) {
       throw Exception('FlutterForegroundTask is already running');
     }
@@ -57,6 +56,25 @@ class ForegroundService {
     if (!requestResult.success) {
       throw Exception(
           "Couldn't start FlutterForegroundTask: ${requestResult.error}");
+    }
+  }
+
+  static Future<void> joinForegroundTask(
+      void Function(dynamic event) onReceiveData) async {
+    if (!await FlutterForegroundTask.isRunningService) {
+      throw Exception('FlutterForegroundTask is not running');
+    }
+
+    // Initialize port for communication between TaskHandler and UI.
+    FlutterForegroundTask.initCommunicationPort();
+    // Register onReceiveData callback
+    FlutterForegroundTask.addTaskDataCallback(onReceiveData);
+
+    final requestResult =
+        await FlutterForegroundTask.updateService(callback: startCallback);
+    if (!requestResult.success) {
+      throw Exception(
+          "Couldn't update FlutterForegroundTask: ${requestResult.error}");
     }
   }
 

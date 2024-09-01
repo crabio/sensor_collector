@@ -39,6 +39,10 @@ class SensorCollectorMobileBloc
     return super.close();
   }
 
+  void _foregroundServiceOnReceiveDataCallback(dynamic jsonData) {
+    add(EventFromForegroundService(ForegroundServiceEvent.fromJson(jsonData)));
+  }
+
   Future<void> _onInit(
     Init event,
     Emitter<SensorCollectorMobileState> emit,
@@ -50,6 +54,8 @@ class SensorCollectorMobileBloc
     if (await ForegroundService.isRunningService()) {
       _log.i('Foreground service is running');
       emit(state.copyWith(isCollectingData: true));
+      await ForegroundService.joinForegroundTask(
+          _foregroundServiceOnReceiveDataCallback);
     }
   }
 
@@ -63,9 +69,8 @@ class SensorCollectorMobileBloc
       emit(state.copyWith(isCollectingData: false));
     } else {
       // Start collecting data
-      await ForegroundService.startForegroundTask((jsonData) => add(
-          EventFromForegroundService(
-              ForegroundServiceEvent.fromJson(jsonData))));
+      await ForegroundService.startForegroundTask(
+          _foregroundServiceOnReceiveDataCallback);
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
   }
