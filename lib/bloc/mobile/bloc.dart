@@ -60,9 +60,9 @@ class SensorCollectorMobileBloc
       emit(state.copyWith(isCollectingData: false));
     } else {
       // Start collecting data
-      await ForegroundService.startForegroundTask((jsonData) =>
+      await ForegroundService.startForegroundTask((jsonData) => add(
           EventFromForegroundService(
-              ForegroundServiceEvent.fromJson(jsonData)));
+              ForegroundServiceEvent.fromJson(jsonData))));
       emit(state.copyWith(isCollectingData: true, elapsed: const Duration()));
     }
   }
