@@ -13,12 +13,11 @@ import 'package:sensor_collector/repositories/wear_os_exporter.dart';
 part 'event.dart';
 part 'state.dart';
 
-class SensorCollectorWearableBloc
-    extends Bloc<SensorCollectorWearableEvent, SensorCollectorWearableState> {
+class WearableBloc extends Bloc<WearableEvent, WearableState> {
   final Logger _log = Logger();
   final WearOsExporter _wearOsExporter = WearOsExporter();
 
-  SensorCollectorWearableBloc() : super(const SensorCollectorWearableState()) {
+  WearableBloc() : super(const WearableState()) {
     on<Init>(_onInit);
     on<PressCollectingButton>(_onPressCollectingButton);
     on<ElapsedTime>(_onElapsedTime);
@@ -36,7 +35,7 @@ class SensorCollectorWearableBloc
 
   Future<void> _onInit(
     Init event,
-    Emitter<SensorCollectorWearableState> emit,
+    Emitter<WearableState> emit,
   ) async {
     // On wearable device init exporter
     await _wearOsExporter.init();
@@ -60,7 +59,7 @@ class SensorCollectorWearableBloc
 
   Future<void> _onPressCollectingButton(
     PressCollectingButton event,
-    Emitter<SensorCollectorWearableState> emit,
+    Emitter<WearableState> emit,
   ) async {
     if (state.isCollectingData) {
       // Stop collecting data
@@ -76,14 +75,14 @@ class SensorCollectorWearableBloc
 
   void _onElapsedTime(
     ElapsedTime event,
-    Emitter<SensorCollectorWearableState> emit,
+    Emitter<WearableState> emit,
   ) {
     emit(state.copyWith(elapsed: event.elapsed));
   }
 
   void _onNewDataFile(
     NewDataFile event,
-    Emitter<SensorCollectorWearableState> emit,
+    Emitter<WearableState> emit,
   ) {
     final Map<String, File> availableFiles = {};
     availableFiles.addAll(state.availableFiles);
@@ -96,7 +95,7 @@ class SensorCollectorWearableBloc
 
   Future<void> _onFileSyncAck(
     FileSyncAck event,
-    Emitter<SensorCollectorWearableState> emit,
+    Emitter<WearableState> emit,
   ) async {
     final Map<String, File> availableFiles = {};
     availableFiles.addAll(state.availableFiles);
@@ -108,7 +107,7 @@ class SensorCollectorWearableBloc
 
   Future<void> _onEventFromForegroundService(
     EventFromForegroundService event,
-    Emitter<SensorCollectorWearableState> emit,
+    Emitter<WearableState> emit,
   ) async {
     switch (event.event.type) {
       case ForegroundServiceEventType.elapsedTime:

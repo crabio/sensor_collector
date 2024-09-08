@@ -1,5 +1,8 @@
 import 'dart:io';
 
+/// This data structure represents an event type sent from the foreground service to the UI.
+///
+/// It can be used to notify the UI of different types of events, such as elapsed time or new data files.
 enum ForegroundServiceEventType { elapsedTime, newDataFile }
 
 class ForegroundServiceEvent {

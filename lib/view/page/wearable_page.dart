@@ -4,20 +4,17 @@ import 'package:sensor_collector/bloc/wearable/bloc.dart';
 import 'package:sensor_collector/view/widget/elapsed_timer.dart';
 import 'package:sensor_collector/view/widget/start_collect_btn.dart';
 
-class SensorCollectorWearablePage extends StatefulWidget {
-  const SensorCollectorWearablePage({super.key});
+class WearablePage extends StatefulWidget {
+  const WearablePage({super.key});
 
   @override
-  State<SensorCollectorWearablePage> createState() =>
-      _SensorCollectorWearablePageState();
+  State<WearablePage> createState() => _WearablePageState();
 }
 
-class _SensorCollectorWearablePageState
-    extends State<SensorCollectorWearablePage> {
+class _WearablePageState extends State<WearablePage> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SensorCollectorWearableBloc,
-        SensorCollectorWearableState>(
+    return BlocBuilder<WearableBloc, WearableState>(
       builder: (context, state) {
         return Center(
           child: Column(
@@ -26,9 +23,7 @@ class _SensorCollectorWearablePageState
               ElapsedTimerWidget(state.elapsed),
               const SizedBox(height: 20),
               StartCollectButton(
-                () => context
-                    .read<SensorCollectorWearableBloc>()
-                    .add(PressCollectingButton()),
+                () => context.read<WearableBloc>().add(PressCollectingButton()),
                 state.isCollectingData,
               ),
             ],

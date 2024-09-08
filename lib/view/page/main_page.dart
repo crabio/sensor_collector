@@ -18,17 +18,15 @@ class MainPage extends StatelessWidget {
       _log.i('Run wearable app');
       return Scaffold(
         body: BlocProvider(
-          create: (_) => SensorCollectorWearableBloc(),
-          child: const SensorCollectorWearablePage(),
+          create: (_) => WearableBloc(),
+          child: const WearablePage(),
         ),
       );
     } else {
       _log.i('Run mobile app');
-      return Scaffold(
-        body: BlocProvider(
-          create: (_) => SensorCollectorMobileBloc(),
-          child: const SensorCollectorMobilePage(),
-        ),
+      return BlocProvider(
+        create: (_) => MobileBloc(),
+        child: const MobilePage(),
       );
     }
   }

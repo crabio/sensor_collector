@@ -1,22 +1,22 @@
 part of 'bloc.dart';
 
-final class SensorCollectorWearableState extends Equatable {
+final class WearableState extends Equatable {
   final bool isCollectingData;
   final Duration elapsed;
   final Map<String, File> availableFiles;
 
-  const SensorCollectorWearableState({
+  const WearableState({
     this.isCollectingData = false,
     this.elapsed = const Duration(),
     this.availableFiles = const {},
   });
 
-  SensorCollectorWearableState copyWith({
+  WearableState copyWith({
     bool? isCollectingData,
     Duration? elapsed,
     Map<String, File>? availableFiles,
   }) {
-    return SensorCollectorWearableState(
+    return WearableState(
       isCollectingData: isCollectingData ?? this.isCollectingData,
       elapsed: elapsed ?? this.elapsed,
       availableFiles: availableFiles ?? this.availableFiles,
