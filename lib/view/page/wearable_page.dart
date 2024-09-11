@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sensor_collector/bloc/wearable/bloc.dart';
-import 'package:sensor_collector/view/widget/elapsed_timer.dart';
-import 'package:sensor_collector/view/widget/start_collect_btn.dart';
+import 'package:sensor_collector/view/page/wear/main_page.dart';
+import 'package:sensor_collector/view/page/wear/settings_page.dart';
 import 'package:wear_plus/wear_plus.dart';
 
 class WearablePage extends StatelessWidget {
-  const WearablePage({super.key});
+  final PageController _verticalPageViewController = PageController();
+
+  WearablePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,20 +18,13 @@ class WearablePage extends StatelessWidget {
           builder: (BuildContext context, WearShape shape, Widget? child) {
             return AmbientMode(
               builder: (context, mode, child) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ElapsedTimerWidget(state.elapsed),
-                      const SizedBox(height: 20),
-                      StartCollectButton(
-                        () => context
-                            .read<WearableBloc>()
-                            .add(PressCollectingButton()),
-                        state.isCollectingData,
-                      ),
-                    ],
-                  ),
+                return PageView(
+                  scrollDirection: Axis.vertical,
+                  controller: _verticalPageViewController,
+                  children: <Widget>[
+                    WearableMainPage(state),
+                    WearableSettingsPage(state),
+                  ],
                 );
               },
             );

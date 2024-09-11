@@ -6,9 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/web.dart';
 import 'package:path/path.dart';
 import 'package:sensor_collector/models/foreground_service_events.dart';
+import 'package:sensor_collector/models/sample_rate.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensor_collector/repositories/foreground_service.dart';
 import 'package:sensor_collector/repositories/wear_os_exporter.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'event.dart';
 part 'state.dart';
@@ -24,6 +27,7 @@ class WearableBloc extends Bloc<WearableEvent, WearableState> {
     on<NewDataFile>(_onNewDataFile);
     on<FileSyncAck>(_onFileSyncAck);
     on<EventFromForegroundService>(_onEventFromForegroundService);
+    on<ChangeSampleRate>(_onChangeSampleRate);
 
     // Start init
     add(Init());
@@ -125,5 +129,14 @@ class WearableBloc extends Bloc<WearableEvent, WearableState> {
         throw Exception(
             'Unknown DataFromForegroundService data type: ${event.event.runtimeType}');
     }
+  }
+
+  Future<void> _onChangeSampleRate(
+    ChangeSampleRate event,
+    Emitter<WearableState> emit,
+  ) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('sampleRate', sampleRateToString[event.sampleRate]!);
+    emit(state.copyWith(sampleRate: event.sampleRate));
   }
 }

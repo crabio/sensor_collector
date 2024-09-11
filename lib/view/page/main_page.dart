@@ -19,7 +19,7 @@ class MainPage extends StatelessWidget {
       return Scaffold(
         body: BlocProvider(
           create: (_) => WearableBloc(),
-          child: const WearablePage(),
+          child: WearablePage(),
         ),
       );
     } else {

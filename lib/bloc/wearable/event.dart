@@ -47,3 +47,12 @@ final class EventFromForegroundService extends WearableEvent {
   @override
   List<Object> get props => [event];
 }
+
+final class ChangeSampleRate extends WearableEvent {
+  final Duration sampleRate;
+
+  const ChangeSampleRate(this.sampleRate);
+
+  @override
+  List<Object> get props => [sampleRate];
+}
