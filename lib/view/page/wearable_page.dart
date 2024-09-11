@@ -5,14 +5,9 @@ import 'package:sensor_collector/view/widget/elapsed_timer.dart';
 import 'package:sensor_collector/view/widget/start_collect_btn.dart';
 import 'package:wear_plus/wear_plus.dart';
 
-class WearablePage extends StatefulWidget {
+class WearablePage extends StatelessWidget {
   const WearablePage({super.key});
 
-  @override
-  State<WearablePage> createState() => _WearablePageState();
-}
-
-class _WearablePageState extends State<WearablePage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WearableBloc, WearableState>(

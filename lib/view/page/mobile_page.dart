@@ -4,14 +4,9 @@ import 'package:sensor_collector/bloc/mobile/bloc.dart';
 import 'package:sensor_collector/view/page/mobile/main_page.dart';
 import 'package:sensor_collector/view/page/mobile/settings_page.dart';
 
-class MobilePage extends StatefulWidget {
+class MobilePage extends StatelessWidget {
   const MobilePage({super.key});
 
-  @override
-  State<MobilePage> createState() => _MobilePageState();
-}
-
-class _MobilePageState extends State<MobilePage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MobileBloc, MobileState>(
