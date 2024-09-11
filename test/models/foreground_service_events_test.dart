@@ -10,22 +10,15 @@ class MockFile extends Mock implements File {
 }
 
 void main() {
-  group('ForegroundServiceEvent', () {
-    test('ElapsedTime factory', () {
+  group('ForegroundServiceEvent.ElapsedTime', () {
+    test('factory', () {
       final event =
           ForegroundServiceEvent.elapsedTime(const Duration(minutes: 1));
       expect(event.type, ForegroundServiceEventType.elapsedTime);
       expect(event.elapsedTime, isInstanceOf<ElapsedTime>());
     });
 
-    test('NewDataFile factory', () {
-      final file = File('path/to/file');
-      final event = ForegroundServiceEvent.newDataFile(file);
-      expect(event.type, ForegroundServiceEventType.newDataFile);
-      expect(event.newDataFile, isInstanceOf<NewDataFile>());
-    });
-
-    test('ElapsedTime fromJson', () {
+    test('fromJson', () {
       Map<String, dynamic> jsonMap = {
         'type': 'ForegroundServiceEventType.elapsedTime',
         'elapsedSeconds': const Duration(minutes: 1).inSeconds,
@@ -37,7 +30,23 @@ void main() {
       expect(event.elapsedTime!.elapsed, const Duration(minutes: 1));
     });
 
-    test('NewDataFile fromJson', () {
+    test('toJson', () {
+      ForegroundServiceEvent event =
+          ForegroundServiceEvent.elapsedTime(const Duration(minutes: 1));
+      Map<String, dynamic> jsonMap = event.toJson();
+      expect(jsonMap['type'], 'ForegroundServiceEventType.elapsedTime');
+      expect(jsonMap['elapsedSeconds'], const Duration(minutes: 1).inSeconds);
+    });
+  });
+  group('ForegroundServiceEvent.NewDataFile', () {
+    test('factory', () {
+      final file = File('path/to/file');
+      final event = ForegroundServiceEvent.newDataFile(file);
+      expect(event.type, ForegroundServiceEventType.newDataFile);
+      expect(event.newDataFile, isInstanceOf<NewDataFile>());
+    });
+
+    test('fromJson', () {
       Map<String, dynamic> jsonMap = {
         'type': 'ForegroundServiceEventType.newDataFile',
         'filePath': '/a/b/cfile_name.txt',
@@ -49,15 +58,7 @@ void main() {
       expect(event.newDataFile!.file.path, '/a/b/cfile_name.txt');
     });
 
-    test('ElapsedTime toJson', () {
-      ForegroundServiceEvent event =
-          ForegroundServiceEvent.elapsedTime(const Duration(minutes: 1));
-      Map<String, dynamic> jsonMap = event.toJson();
-      expect(jsonMap['type'], 'ForegroundServiceEventType.elapsedTime');
-      expect(jsonMap['elapsedSeconds'], const Duration(minutes: 1).inSeconds);
-    });
-
-    test('NewDataFile toJson', () {
+    test('toJson', () {
       final file = MockFile();
       ForegroundServiceEvent event = ForegroundServiceEvent.newDataFile(file);
       Map<String, dynamic> jsonMap = event.toJson();

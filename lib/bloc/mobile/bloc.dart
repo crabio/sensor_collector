@@ -6,27 +6,31 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'package:logger/web.dart';
 import 'package:sensor_collector/models/foreground_service_events.dart';
+import 'package:sensor_collector/models/sample_rate.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensor_collector/repositories/foreground_service.dart';
 import 'package:sensor_collector/repositories/wear_os_importer.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'event.dart';
 part 'state.dart';
 
-class SensorCollectorMobileBloc
-    extends Bloc<SensorCollectorMobileEvent, SensorCollectorMobileState> {
+class MobileBloc extends Bloc<MobileEvent, MobileState> {
   final Logger _log = Logger();
   final WearOsImporter _wearOsImporter = WearOsImporter();
 
   StreamSubscription<WearOsDevice>? _connectedDeviceSubscription;
 
-  SensorCollectorMobileBloc() : super(const SensorCollectorMobileState()) {
+  MobileBloc() : super(const MobileState()) {
     on<Init>(_onInit);
     on<PressCollectingButton>(_onPressCollectingButton);
     on<SyncWearFiles>(_onSyncWearFiles);
     on<ElapsedTime>(_onElapsedTime);
     on<WearDeviceConnected>(_onWearDeviceConnected);
     on<FileForSyncUpdate>(_onFileForSyncUpdate);
+    on<PressSettingsButton>(_onPressSettingsButton);
+    on<ChangeSampleRate>(_onChangeSampleRate);
     on<EventFromForegroundService>(_onEventFromForegroundService);
 
     // Start init
@@ -45,7 +49,7 @@ class SensorCollectorMobileBloc
 
   Future<void> _onInit(
     Init event,
-    Emitter<SensorCollectorMobileState> emit,
+    Emitter<MobileState> emit,
   ) async {
     await _wearOsImporter.init();
     ForegroundService.initForegroundTask();
@@ -61,7 +65,7 @@ class SensorCollectorMobileBloc
 
   Future<void> _onPressCollectingButton(
     PressCollectingButton event,
-    Emitter<SensorCollectorMobileState> emit,
+    Emitter<MobileState> emit,
   ) async {
     if (state.isCollectingData) {
       // Stop collecting data
@@ -77,14 +81,14 @@ class SensorCollectorMobileBloc
 
   void _onElapsedTime(
     ElapsedTime event,
-    Emitter<SensorCollectorMobileState> emit,
+    Emitter<MobileState> emit,
   ) {
     emit(state.copyWith(elapsed: event.elapsed));
   }
 
   Future<void> _onWearDeviceConnected(
     WearDeviceConnected event,
-    Emitter<SensorCollectorMobileState> emit,
+    Emitter<MobileState> emit,
   ) async {
     _stopWaitConnectedDevice();
     emit(
@@ -101,14 +105,14 @@ class SensorCollectorMobileBloc
 
   void _onFileForSyncUpdate(
     FileForSyncUpdate event,
-    Emitter<SensorCollectorMobileState> emit,
+    Emitter<MobileState> emit,
   ) {
     emit(state.copyWith(filesToSync: event.filesMap));
   }
 
   Future<void> _onSyncWearFiles(
     SyncWearFiles event,
-    Emitter<SensorCollectorMobileState> emit,
+    Emitter<MobileState> emit,
   ) async {
     emit(state.copyWith(isSynInProgress: true));
 
@@ -130,9 +134,25 @@ class SensorCollectorMobileBloc
     _connectedDeviceSubscription?.cancel();
   }
 
+  void _onPressSettingsButton(
+    PressSettingsButton event,
+    Emitter<MobileState> emit,
+  ) {
+    emit(state.copyWith(isSettingsOpen: !state.isSettingsOpen));
+  }
+
+  Future<void> _onChangeSampleRate(
+    ChangeSampleRate event,
+    Emitter<MobileState> emit,
+  ) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('sampleRate', sampleRateToString[event.sampleRate]!);
+    emit(state.copyWith(sampleRate: event.sampleRate));
+  }
+
   Future<void> _onEventFromForegroundService(
     EventFromForegroundService event,
-    Emitter<SensorCollectorMobileState> emit,
+    Emitter<MobileState> emit,
   ) async {
     switch (event.event.type) {
       case ForegroundServiceEventType.elapsedTime:

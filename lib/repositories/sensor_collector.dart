@@ -16,7 +16,7 @@ class SensorCollectorService {
   SensorCollectorService(this.dataWriterService);
 
   void start([Duration sensorInterval = SensorInterval.normalInterval]) {
-    _log.i('Start');
+    _log.i('Start. sensorInterval=$sensorInterval');
     _userAccelerometerStream =
         userAccelerometerEventStream(samplingPeriod: sensorInterval).listen(
       _userAccelerometerEventHandler,

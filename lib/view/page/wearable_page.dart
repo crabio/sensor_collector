@@ -1,38 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sensor_collector/bloc/wearable/bloc.dart';
-import 'package:sensor_collector/view/widget/elapsed_timer.dart';
-import 'package:sensor_collector/view/widget/start_collect_btn.dart';
+import 'package:sensor_collector/view/page/wear/main_page.dart';
+import 'package:sensor_collector/view/page/wear/settings_page.dart';
+import 'package:wear_plus/wear_plus.dart';
 
-class SensorCollectorWearablePage extends StatefulWidget {
-  const SensorCollectorWearablePage({super.key});
+class WearablePage extends StatelessWidget {
+  final PageController _verticalPageViewController = PageController();
 
-  @override
-  State<SensorCollectorWearablePage> createState() =>
-      _SensorCollectorWearablePageState();
-}
+  WearablePage({super.key});
 
-class _SensorCollectorWearablePageState
-    extends State<SensorCollectorWearablePage> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SensorCollectorWearableBloc,
-        SensorCollectorWearableState>(
+    return BlocBuilder<WearableBloc, WearableState>(
       builder: (context, state) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              ElapsedTimerWidget(state.elapsed),
-              const SizedBox(height: 20),
-              StartCollectButton(
-                () => context
-                    .read<SensorCollectorWearableBloc>()
-                    .add(PressCollectingButton()),
-                state.isCollectingData,
-              ),
-            ],
-          ),
+        return WatchShape(
+          builder: (BuildContext context, WearShape shape, Widget? child) {
+            return AmbientMode(
+              builder: (context, mode, child) {
+                return PageView(
+                  scrollDirection: Axis.vertical,
+                  controller: _verticalPageViewController,
+                  children: <Widget>[
+                    WearableMainPage(state),
+                    WearableSettingsPage(state),
+                  ],
+                );
+              },
+            );
+          },
         );
       },
     );

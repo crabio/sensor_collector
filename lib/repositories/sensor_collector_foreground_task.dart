@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:logger/web.dart';
 import 'package:sensor_collector/models/foreground_service_events.dart';
+import 'package:sensor_collector/models/sample_rate.dart';
 import 'package:sensor_collector/repositories/data_writer.dart';
 import 'package:sensor_collector/repositories/sensor_collector.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SensorCollectorServiceTaskHandler extends TaskHandler {
   final Logger _log = Logger();
@@ -28,8 +30,15 @@ class SensorCollectorServiceTaskHandler extends TaskHandler {
         .listen((file) => FlutterForegroundTask.sendDataToMain(
             ForegroundServiceEvent.newDataFile(file).toJson()));
     _startTimer();
+    // Obtain app setting
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? sampleRateName = prefs.getString('sampleRate');
     // Start sensor collection
-    sensorCollectorService.start();
+    if (sampleRateName != null) {
+      sensorCollectorService.start(sampleRateFromString[sampleRateName]!);
+    } else {
+      sensorCollectorService.start();
+    }
     _log.i('SensorCollectorServiceTaskHandler started');
   }
 
