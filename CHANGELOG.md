@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/crabio/sensor_collector/compare/v0.2.3...v0.2.4) (2024-09-12)
+
+
+### Bug Fixes
+
+* upload flutter assets to release permissions in the ci ([7de46da](https://github.com/crabio/sensor_collector/commit/7de46da43ae83bdfaaf3123e0376644bcb5a066b))
+
 ## [0.2.3](https://github.com/crabio/sensor_collector/compare/v0.2.2...v0.2.3) (2024-09-12)
 
 
