@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/crabio/sensor_collector/compare/v0.2.1...v0.2.2) (2024-09-12)
+
+
+### Bug Fixes
+
+* setup JDK 11 for flutter android build ([717b647](https://github.com/crabio/sensor_collector/commit/717b6473539539c42e76d04936c6146debafac84))
+* update flutter_foreground_task and fix signature ([e549809](https://github.com/crabio/sensor_collector/commit/e549809ed4836eddfddc9ec60f40410196500831))
+
 ## [0.2.1](https://github.com/crabio/sensor_collector/compare/v0.2.0...v0.2.1) (2024-09-12)
 
 
