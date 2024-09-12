@@ -24,3 +24,9 @@ jobs:
       - run: flutter pub get
       - run: flutter build apk --release
       - run: flutter build appbundle --release
+      - name: Upload APK and AppBundle to Release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: ${{ github.event.release.tag_name }}
+          artifacts: build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/flutter-apk/app-release.aab
