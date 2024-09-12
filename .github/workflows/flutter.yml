@@ -4,6 +4,9 @@ on:
 
 name: flutter
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
