@@ -41,7 +41,7 @@ dependencies:
   equatable: ^2.0.5
   flutter_wear_os_connectivity: ^1.0.0
   device_info_plus: ^10.1.0
-  flutter_foreground_task: ^8.0.0
+  flutter_foreground_task: ^8.8.1+1
   flutter_native_splash: ^2.4.1
   flutter_launcher_icons: ^0.13.1
   shared_preferences: ^2.3.2

@@ -26,8 +26,8 @@ class ForegroundService {
         showNotification: false,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(
-        isOnceEvent: true,
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.once(),
         autoRunOnBoot: true,
       ),
     );
