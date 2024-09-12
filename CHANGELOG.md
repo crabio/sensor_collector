@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/crabio/sensor_collector/compare/v0.2.4...v0.2.5) (2024-09-12)
+
+
+### Bug Fixes
+
+* uploading app bundle for flutter android ci job ([865432d](https://github.com/crabio/sensor_collector/commit/865432de77a0f46d41e121c20b93973668991f91))
+
 ## [0.2.4](https://github.com/crabio/sensor_collector/compare/v0.2.3...v0.2.4) (2024-09-12)
 
 
