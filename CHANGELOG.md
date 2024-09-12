@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/crabio/sensor_collector/compare/v0.2.2...v0.2.3) (2024-09-12)
+
+
+### Bug Fixes
+
+* add uploading apk to release tag ([40d7a93](https://github.com/crabio/sensor_collector/commit/40d7a93a593e5fc8bb1540e9baa448efb7d26308))
+
 ## [0.2.2](https://github.com/crabio/sensor_collector/compare/v0.2.1...v0.2.2) (2024-09-12)
 
 
