@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/crabio/sensor_collector/compare/v0.2.0...v0.2.1) (2024-09-12)
+
+
+### Bug Fixes
+
+* fix ci for flutter ([fb5b176](https://github.com/crabio/sensor_collector/commit/fb5b176fb2aa5befd9bf711dd72f1c7f04b45d50))
+
 ## [0.2.0](https://github.com/crabio/sensor_collector/compare/0.1.0...v0.2.0) (2024-09-11)
 
 
